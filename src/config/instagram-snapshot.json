@@ -1,0 +1,59 @@
+{
+  "generatedAt": "2026-11-15T15:08:18.087Z",
+  "posts": [
+    {
+      "shortcode": "DfiBDc_ISIN",
+      "src": "/cuts/ig-DfiBDc_ISIN.jpg",
+      "alt": "Coupe réalisée par Dysicut, Marseille",
+      "isVideo": true,
+      "isCarousel": false,
+      "width": 720,
+      "height": 1280
+    },
+    {
+      "shortcode": "DfhRt3HCDX4",
+      "src": "/cuts/ig-DfhRt3HCDX4.jpg",
+      "alt": "Coupe réalisée par Dysicut, Marseille",
+      "isVideo": false,
+      "isCarousel": true,
+      "width": 720,
+      "height": 960
+    },
+    {
+      "shortcode": "DfffI5gCKSH",
+      "src": "/cuts/ig-DfffI5gCKSH.jpg",
+      "alt": "Coupe réalisée par Dysicut, Marseille",
+      "isVideo": false,
+      "isCarousel": true,
+      "width": 720,
+      "height": 960
+    },
+    {
+      "shortcode": "DP_eqpgCEOu",
+      "src": "/cuts/ig-DP_eqpgCEOu.jpg",
+      "alt": "Taper fade clean",
+      "isVideo": false,
+      "isCarousel": true,
+      "width": 720,
+      "height": 720
+    },
+    {
+      "shortcode": "DNGpwMKsayn",
+      "src": "/cuts/ig-DNGpwMKsayn.jpg",
+      "alt": "Coupe réalisée par Dysicut, Marseille",
+      "isVideo": true,
+      "isCarousel": false,
+      "width": 720,
+      "height": 1280
+    },
+    {
+      "shortcode": "C7USH1FNJAI",
+      "src": "/cuts/ig-C7USH1FNJAI.jpg",
+      "alt": "Coupe réalisée par Dysicut, Marseille",
+      "isVideo": false,
+      "isCarousel": false,
+      "width": 1080,
+      "height": 1350
+    }
+  ]
+}
