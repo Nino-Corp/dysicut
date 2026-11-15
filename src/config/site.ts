@@ -18,6 +18,8 @@ export const site = {
     street: "35-29 Chem. des Campanules",
     postalCode: "13012",
     city: "Marseille",
+    // Position du numéro 35 telle que localisée par Google Maps (adresse provisoire). TODO à corriger avec l'adresse exacte.
+    coords: { lat: 43.30026, lon: 5.44854 },
   },
 
   social: {
@@ -61,4 +63,17 @@ export const defaultBookingSettings = {
   slotStepMin: 40,
   minLeadHours: 2,
   maxAdvanceDays: 30,
+} as const;
+
+/**
+ * Informations légales (mentions légales). TODO à compléter par l'ami avant la mise en ligne :
+ * tant qu'une valeur est null, la page affiche « à compléter ».
+ */
+export const legal = {
+  ownerName: null as string | null, // nom et prénom de l'entrepreneur individuel
+  statut: "Entrepreneur individuel (micro-entrepreneur)",
+  siret: null as string | null,
+  contactEmail: process.env.NOTIFY_EMAIL ?? null, // TODO email réel de l'ami
+  mediator: null as string | null, // médiateur de la consommation (obligatoire pour un pro qui vend à des consommateurs)
+  host: { name: "Vercel Inc.", address: "440 N Barranca Ave #4133, Covina, CA 91723, États-Unis", url: "https://vercel.com" },
 } as const;
