@@ -1,0 +1,64 @@
+/**
+ * Source unique : infos fixes et valeurs INITIALES (seed).
+ * Horaires, prestations et tarifs seront éditables depuis /admin (base de données) plus tard.
+ */
+
+export const site = {
+  name: "Dysicut",
+  tagline: "Une coupe nette. Rien de plus.", // provisoire
+  city: "Marseille",
+  locale: "fr-FR",
+  timezone: "Europe/Paris",
+  // Doit être défini en production (NEXT_PUBLIC_SITE_URL), sert aux métadonnées.
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+
+  // Adresse PROVISOIRE, non confirmée : ne pas l'utiliser dans le JSON-LD ni la carte.
+  address: {
+    confirmed: false,
+    street: "35-29 Chem. des Campanules",
+    postalCode: "13012",
+    city: "Marseille",
+  },
+
+  social: {
+    instagramHandle: "dysicutz",
+    instagramUrl: "https://www.instagram.com/dysicutz/",
+    instagramDm: "https://ig.me/m/dysicutz",
+    // TODO handle TikTok, numéro WhatsApp / téléphone : à fournir (boutons masqués en attendant)
+    tiktokUrl: null as string | null,
+    whatsappUrl: null as string | null,
+    phone: null as string | null,
+  },
+} as const;
+
+export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = dimanche
+
+/** Horaires temporaires : lundi à jeudi, 11h-20h. Absent = fermé. */
+export const defaultOpeningHours: Partial<Record<Weekday, { start: string; end: string }>> = {
+  1: { start: "11:00", end: "20:00" },
+  2: { start: "11:00", end: "20:00" },
+  3: { start: "11:00", end: "20:00" },
+  4: { start: "11:00", end: "20:00" },
+};
+
+export type Service = {
+  id: string;
+  name: string;
+  durationMin: number;
+  priceEur: number;
+};
+
+// TODO tarifs réels : valeurs fictives, à remplacer. Ne pas présenter comme définitives.
+export const defaultServices: readonly Service[] = [
+  { id: "coupe", name: "Coupe", durationMin: 40, priceEur: 20 },
+  { id: "barbe", name: "Barbe", durationMin: 40, priceEur: 12 },
+  { id: "coupe-barbe", name: "Coupe + barbe", durationMin: 40, priceEur: 30 },
+  { id: "enfant", name: "Enfant (-12 ans)", durationMin: 40, priceEur: 15 },
+];
+
+/** Réglages de réservation par défaut (réglables dans l'admin plus tard). */
+export const defaultBookingSettings = {
+  slotStepMin: 40,
+  minLeadHours: 2,
+  maxAdvanceDays: 30,
+} as const;
