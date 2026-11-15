@@ -1,9 +1,13 @@
 import { defaultServices } from "@/config/site";
+import { getConfig } from "@/lib/booking/repo";
 import { BookButton } from "@/components/ui/BookButton";
 import { Reveal } from "@/components/ui/Reveal";
 
-// TODO tarifs réels : les prix viennent de defaultServices (valeurs fictives).
-export function Pricing() {
+// Prix lus en base (editables dans /admin) ; repli sur defaultServices (valeurs fictives, TODO tarifs réels).
+export async function Pricing() {
+  const services = await getConfig()
+    .then((c) => c.services)
+    .catch(() => defaultServices);
   return (
     <section id="tarifs" className="scroll-mt-4 border-t border-line px-5 py-24 nav:px-14 nav:py-32">
       <div className="mx-auto grid max-w-[1400px] gap-12 nav:grid-cols-[1fr_1.2fr] nav:gap-20">
@@ -15,7 +19,7 @@ export function Pricing() {
 
         <div>
           <ul className="border-t border-line">
-            {defaultServices.map((s, i) => (
+            {services.map((s, i) => (
               <Reveal as="li" key={s.id} delay={i * 0.05} className="flex min-h-[72px] items-baseline justify-between gap-4 border-b border-line py-5">
                 <div>
                   <span className="text-xl font-semibold tracking-tight nav:text-2xl">{s.name}</span>
