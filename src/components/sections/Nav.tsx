@@ -5,11 +5,14 @@ import { useEffect, useRef } from "react";
 import { Bars2Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { navLinks } from "@/config/nav";
 import { site } from "@/config/site";
+import { LogoMark } from "@/components/ui/LogoMark";
 import { BookButton } from "@/components/ui/BookButton";
 import { OpenStatus } from "@/components/widgets/OpenStatus";
 
 export function Nav() {
   const drawer = useRef<HTMLDialogElement>(null);
+  const header = useRef<HTMLElement>(null);
+  const inner = useRef<HTMLElement>(null);
 
   const open = () => {
     drawer.current?.showModal();
@@ -34,11 +37,42 @@ export function Nav() {
     };
   }, []);
 
+  // Header fixe : suit le scroll (disparait vers le bas, reapparait des qu'on remonte), contenu en leger decalage (parallaxe).
+  useEffect(() => {
+    const h = header.current;
+    const n = inner.current;
+    if (!h || !n) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let last = window.scrollY;
+    let offset = 0;
+    let raf = 0;
+    const apply = () => {
+      raf = 0;
+      const max = h.offsetHeight + 24; // + marge pour l'ombre
+      const y = Math.max(0, window.scrollY);
+      const delta = y - last;
+      last = y;
+      offset = y <= 0 ? 0 : Math.min(max, Math.max(0, offset + delta));
+      h.style.transform = `translate3d(0, ${-offset}px, 0)`;
+      if (!reduce) n.style.transform = `translate3d(0, ${-offset * 0.35}px, 0)`;
+      h.toggleAttribute("data-scrolled", y > 8);
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(apply);
+    };
+    apply();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
   return (
-    <header className="absolute inset-x-0 top-0 z-30">
-      <nav aria-label="Navigation principale" className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-5 nav:h-20 nav:px-14">
-        <Link href="/" className="text-[15px] font-semibold tracking-tight">
-          {site.name}
+    <header ref={header} className="site-header fixed inset-x-0 top-0 z-30 bg-surface will-change-transform">
+      <nav ref={inner} aria-label="Navigation principale" className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-5 nav:h-20 nav:px-14">
+        <Link href="/" aria-label={`${site.name}, accueil`} className="nav-logo flex min-h-11 items-center">
+          <LogoMark className="h-11 w-auto nav:h-12" />
         </Link>
 
         <OpenStatus className="nav:hidden" />
@@ -46,7 +80,7 @@ export function Nav() {
         <ul className="hidden items-center gap-8 nav:flex">
           {navLinks.map((l) => (
             <li key={l.href}>
-              <Link href={l.href} className="text-sm text-fg/80 transition-colors duration-[var(--dur)] hover:text-fg">
+              <Link href={l.href} className="flex min-h-11 items-center text-sm text-fg/80 transition-colors duration-[var(--dur)] hover:text-fg">
                 {l.label}
               </Link>
             </li>

@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { POLE_H, POLE_W, createPole } from "@/lib/poleRender";
 
 const STORAGE_KEY = "dysicut-intro";
-const TOTAL = 2400; // ms
-const STRIP_W = 56; // longueur de la bande du hero
+const BASE = 1550; // durée de la chronologie d'origine (ms), sert de référence aux repères
+const TOTAL = 1420; // durée réelle (ms) : la chronologie est comprimée proportionnellement
 
 /**
  * Intro barber pole (CLAUDE.md section 5.1). Superposition non interactive.
@@ -40,11 +40,11 @@ export function PoleIntro() {
       return;
     }
 
-    const scroll = createPole(rig.current);
+    createPole(rig.current);
     const cx = target.left + target.width / 2;
     const cy = target.top + target.height / 2;
     const s = Math.min(h * 0.62, w * 1.2) / POLE_H; // le pole occupe ~62 % de la hauteur d'écran
-    const sEnd = STRIP_W / POLE_H;
+    const sEnd = target.width / POLE_H; // suit la largeur réelle de la bande #hero-pole
     const dx = w / 2 - cx;
     const dy = h / 2 - cy;
 
@@ -55,35 +55,34 @@ export function PoleIntro() {
     const start = `translate(${dx}px, ${dy}px) rotate(0deg) scale(${s})`;
     const end = `translate(0px, 0px) rotate(90deg) scale(${sEnd})`;
     const inOut = "cubic-bezier(0.65, 0, 0.35, 1)";
-    const t = (ms: number) => ms / TOTAL;
+    const t = (ms: number) => ms / BASE;
     const opts = { duration: TOTAL, fill: "both" as const, easing: "linear" };
 
-    // Chronologie : 0-0,5 s apparition | 0,5-1,4 s le pole tourne, vertical | 1,4-2,1 s il se couche
-    // et rejoint la bande | 2,1-2,4 s le noir se lève, relais avec la vraie bande.
+    // Chronologie : 0-0,25 s apparition | 0,25-0,55 s le pole tourne, vertical | 0,55-1,25 s il se couche
+    // et rejoint la bande | 1,25-1,55 s le noir se lève, relais avec la vraie bande.
     const anims = [
       el.animate(
         [
           { transform: start, opacity: 0, offset: 0 },
-          { transform: start, opacity: 1, offset: t(500) },
-          { transform: start, opacity: 1, offset: t(1400), easing: inOut },
-          { transform: end, opacity: 1, offset: t(2100) },
-          { transform: end, opacity: 1, offset: t(2150) },
-          { transform: end, opacity: 0, offset: 1 },
+          { transform: start, opacity: 1, offset: t(250) },
+          { transform: start, opacity: 1, offset: t(550), easing: inOut },
+          { transform: end, opacity: 1, offset: t(1250) },
+          { transform: end, opacity: 1, offset: 1 },
         ],
         opts,
       ),
-      back.current.animate([{ opacity: 1 }, { opacity: 1, offset: t(2100) }, { opacity: 0 }], opts),
+      back.current.animate([{ opacity: 1 }, { opacity: 1, offset: t(1250) }, { opacity: 0 }], opts),
     ];
     document.querySelector(".hero-blade")?.setAttribute("data-draw", "");
 
     anims[1]!.onfinish = () => {
+      // Relais sans coupure : le tube et les embouts de l'intro (rayures en cours) passent dans la bande du hero.
+      const heroRig = document.querySelector<HTMLElement>("#hero-pole > div");
+      if (heroRig) heroRig.replaceChildren(...Array.from(rig.current?.childNodes ?? []));
       try { sessionStorage.setItem(STORAGE_KEY, "1"); } catch {}
       finish();
     };
-    // Les rayures cessent de défiler quand le pole se couche : moins de travail pendant le rapetissement.
-    const stop = window.setTimeout(() => scroll?.pause(), 1400);
     return () => {
-      window.clearTimeout(stop);
       anims.forEach((a) => a.cancel());
     };
   }, []);
