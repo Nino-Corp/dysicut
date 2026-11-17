@@ -10,7 +10,9 @@ export const site = {
   locale: "fr-FR",
   timezone: "Europe/Paris",
   // Doit être défini en production (NEXT_PUBLIC_SITE_URL), sert aux métadonnées.
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  url:
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000"),
 
   // Adresse PROVISOIRE, non confirmée : ne pas l'utiliser dans le JSON-LD ni la carte.
   address: {

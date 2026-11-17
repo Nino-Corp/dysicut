@@ -19,7 +19,8 @@ function Block({ title, id, children }: { title: string; id?: string; children: 
 }
 
 export default function MentionsLegales() {
-  const { street, postalCode, city } = site.address;
+  const address = site.address;
+  const { street, postalCode, city } = address;
   return (
     <main className="px-5 py-12 nav:px-14 nav:py-20">
       <article className="mx-auto max-w-2xl">
@@ -31,7 +32,7 @@ export default function MentionsLegales() {
             {site.name}, {legal.statut.toLowerCase()}, exploité par {todo(legal.ownerName)}.
           </p>
           <p>SIRET : {todo(legal.siret)}</p>
-          <p>Adresse du studio : {street}, {postalCode} {city}</p>
+          <p>Adresse du studio : {address.confirmed ? `${street}, ${postalCode} ${city}` : "à compléter"}</p>
           <p>Contact : {todo(legal.contactEmail)} ou message privé Instagram @{site.social.instagramHandle}</p>
           <p>Directeur de la publication : {todo(legal.ownerName)}.</p>
         </Block>

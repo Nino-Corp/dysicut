@@ -9,11 +9,16 @@ const inter = Inter({
   display: "swap",
 });
 
+const description = `${site.name}, barber homme à ${site.city}. Coupe, dégradé et barbe dans un studio calme, sur rendez-vous. Réserve ton créneau en ligne.`;
+
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
-  title: { default: `${site.name} - Barber à ${site.city}`, template: `%s | ${site.name}` },
-  description: `${site.name}, barber à ${site.city}. Sur rendez-vous.`,
-  openGraph: { siteName: site.name, locale: "fr_FR", type: "website" },
+  title: { default: site.name, template: `%s | ${site.name}` },
+  description,
+  applicationName: site.name,
+  alternates: { canonical: "/" },
+  openGraph: { siteName: site.name, locale: "fr_FR", type: "website", url: "/", title: site.name, description },
+  twitter: { card: "summary_large_image", title: site.name, description },
 };
 
 export const viewport: Viewport = {
