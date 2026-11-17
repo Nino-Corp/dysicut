@@ -9,3 +9,5 @@ next-env.d.ts
 .vercel
 node_modules
 CLAUDE.md
+AGENTS.md
+.claude/
