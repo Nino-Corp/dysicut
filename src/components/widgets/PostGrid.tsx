@@ -15,6 +15,14 @@ const PostViewer = dynamic(() => import("./PostViewer"), { ssr: false });
 export function PostGrid({ posts }: { posts: FeedPost[] }) {
   const [open, setOpen] = useState<number | null>(null);
   const warmed = useRef(new Set<number>());
+  const trigger = useRef<HTMLAnchorElement | null>(null);
+
+  // Rend le focus a la tuile qui a ouvert la visionneuse (le dialog est demonte avant la restauration native).
+  const close = () => {
+    setOpen(null);
+    const t = trigger.current;
+    if (t) window.setTimeout(() => t.focus({ preventScroll: true }), 80);
+  };
 
   // Dès le toucher (avant le tap complet), on commence à charger les slides du post.
   const warm = (i: number) => {
@@ -41,6 +49,7 @@ export function PostGrid({ posts }: { posts: FeedPost[] }) {
               onClick={(e) => {
                 if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
                 e.preventDefault();
+                trigger.current = e.currentTarget;
                 setOpen(i);
               }}
               className="group block"
@@ -62,7 +71,7 @@ export function PostGrid({ posts }: { posts: FeedPost[] }) {
           </Reveal>
         ))}
       </ul>
-      {open !== null ? <PostViewer posts={posts} start={open} onClose={() => setOpen(null)} /> : null}
+      {open !== null ? <PostViewer posts={posts} start={open} onClose={close} /> : null}
     </>
   );
 }
