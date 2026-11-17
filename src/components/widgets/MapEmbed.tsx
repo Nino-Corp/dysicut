@@ -127,19 +127,21 @@ export function MapEmbed({ lat, lon, mapsUrl }: { lat: number; lon: number; maps
   }, [lat, lon]);
 
   return (
-    <a
-      href={mapsUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Ouvrir l'emplacement du studio dans Google Maps"
-      className="relative block aspect-[4/3] overflow-hidden rounded-card border border-line bg-[var(--map-land)] transition-colors duration-[var(--dur)] hover:border-line-strong"
-    >
-      <div ref={box} aria-hidden className="absolute inset-0" />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      {image && <img src={image} alt="" className="absolute inset-0 size-full object-cover" />}
-      <AppleStylePin className="absolute left-1/2 top-1/2 h-[66px] w-[46px] -translate-x-1/2 -translate-y-full overflow-visible" />
-      <span aria-hidden className="pointer-events-none absolute inset-0 rounded-card [background:radial-gradient(ellipse_at_center,transparent_60%,var(--map-land)_115%)]" />
-      <span className="absolute bottom-2 right-3 text-[10px] text-fg-muted">© OpenFreeMap © OpenStreetMap</span>
-    </a>
+    <div className="relative">
+      <a
+        href={mapsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Ouvrir l'emplacement du studio dans Google Maps"
+        className="relative block aspect-[4/3] overflow-hidden rounded-card border border-line bg-[var(--map-land)] transition-colors duration-[var(--dur)] hover:border-line-strong"
+      >
+        <div ref={box} aria-hidden className="absolute inset-0" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {image && <img src={image} alt="" className="absolute inset-0 size-full object-cover" />}
+        <AppleStylePin className="absolute left-1/2 top-1/2 h-[66px] w-[46px] -translate-x-1/2 -translate-y-full overflow-visible" />
+        <span aria-hidden className="pointer-events-none absolute inset-0 rounded-card [background:radial-gradient(ellipse_at_center,transparent_60%,var(--map-land)_115%)]" />
+      </a>
+      <span className="pointer-events-none absolute bottom-2 right-3 text-[11px] text-fg-muted">© OpenFreeMap © OpenStreetMap</span>
+    </div>
   );
 }
