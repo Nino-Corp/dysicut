@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { ArrowUpRightIcon } from "@heroicons/react/24/outline";
+import { HoverButton } from "@/components/ui/HoverButton";
 import { site } from "@/config/site";
 import { cuts } from "@/config/cuts";
 import { PostGrid } from "@/components/widgets/PostGrid";
@@ -49,15 +49,9 @@ export async function Cuts() {
           </ul>
         )}
 
-        <a
-          href={site.social.instagramUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-10 inline-flex h-12 items-center gap-2 rounded-full border border-line-strong px-6 text-[15px] font-semibold tracking-tight transition-colors duration-[var(--dur)] hover:bg-surface-2"
-        >
+        <HoverButton href={site.social.instagramUrl} target="_blank" variant="ghost" className="mt-10">
           Voir plus sur Instagram
-          <ArrowUpRightIcon className="size-4" aria-hidden />
-        </a>
+        </HoverButton>
       </div>
     </section>
   );

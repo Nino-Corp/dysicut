@@ -1,4 +1,4 @@
-import { ArrowUpRightIcon } from "@heroicons/react/24/outline";
+import { HoverButton } from "@/components/ui/HoverButton";
 import { site } from "@/config/site";
 import { HoursList } from "@/components/widgets/HoursList";
 import { MapEmbed } from "@/components/widgets/MapEmbed";
@@ -33,15 +33,9 @@ export function Info() {
               <br />
               {postalCode} {city}
             </p>
-            <a
-              href={mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-5 inline-flex h-12 items-center gap-2 rounded-full border border-line-strong px-6 text-[15px] font-semibold tracking-tight transition-colors duration-[var(--dur)] hover:bg-surface-2"
-            >
+            <HoverButton href={mapsUrl} target="_blank" variant="ghost" className="mt-5">
               Y aller
-              <ArrowUpRightIcon className="size-4" aria-hidden />
-            </a>
+            </HoverButton>
           </div>
         </div>
       </div>

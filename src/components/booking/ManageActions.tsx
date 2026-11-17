@@ -1,15 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowDownTrayIcon, CheckIcon, ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 import { site } from "@/config/site";
+import { HoverButton } from "@/components/ui/HoverButton";
 import { dayLabel, timeLabel } from "@/lib/booking/time";
 import type { BookingView } from "@/lib/booking/repo";
 import { clearStored, writeStored } from "./storage";
-
-const btn =
-  "inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-line-strong px-6 text-[15px] font-semibold tracking-tight transition-colors duration-[var(--dur)] hover:bg-surface-2 disabled:opacity-50";
 
 type Props = { token: string; booking: BookingView };
 
@@ -62,9 +59,9 @@ export function ManageActions({ token, booking }: Props) {
     return (
       <div className="space-y-4">
         <p className="text-[17px]">{view.status === "no_show" ? "Ce rendez-vous est clos." : "Ce rendez-vous est annulé. Le créneau est libre."}</p>
-        <Link href="/reserver" className={btn}>
+        <HoverButton href="/reserver" variant="ghost" className="w-full">
           Reprendre rdv
-        </Link>
+        </HoverButton>
       </div>
     );
   }
@@ -86,17 +83,15 @@ export function ManageActions({ token, booking }: Props) {
             onFocus={(e) => e.currentTarget.select()}
             className="h-12 min-w-0 flex-1 rounded-2xl border border-line-strong bg-surface-2 px-4 text-[15px] text-fg-muted"
           />
-          <button type="button" onClick={copy} className="inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-fg px-5 text-[15px] font-semibold text-bg active:scale-[0.98]">
-            {copied ? <CheckIcon className="size-5" aria-hidden /> : <ClipboardDocumentIcon className="size-5" aria-hidden />}
+          <HoverButton onClick={copy} icon={copied ? CheckIcon : ClipboardDocumentIcon}>
             {copied ? "Copié" : "Copier"}
-          </button>
+          </HoverButton>
         </div>
       </div>
 
-      <a href={`/api/booking/${token}/ics`} className={btn}>
-        <ArrowDownTrayIcon className="size-5" aria-hidden />
+      <HoverButton href={`/api/booking/${token}/ics`} variant="ghost" icon={ArrowDownTrayIcon} className="w-full">
         Ajouter à mon calendrier
-      </a>
+      </HoverButton>
 
       {view.cancellable ? (
         confirming ? (
@@ -105,18 +100,18 @@ export function ManageActions({ token, booking }: Props) {
               Annuler le rdv du {dayLabel(start)} à {timeLabel(start)} ?
             </p>
             <div className="mt-4 grid grid-cols-2 gap-3">
-              <button type="button" disabled={busy} onClick={() => setConfirming(false)} className={btn}>
+              <HoverButton variant="ghost" disabled={busy} onClick={() => setConfirming(false)}>
                 Garder
-              </button>
-              <button type="button" disabled={busy} onClick={cancel} className="inline-flex h-12 items-center justify-center rounded-full bg-fg px-6 text-[15px] font-semibold text-bg disabled:opacity-50">
+              </HoverButton>
+              <HoverButton disabled={busy} onClick={cancel}>
                 {busy ? "Annulation..." : "Oui, annuler"}
-              </button>
+              </HoverButton>
             </div>
           </div>
         ) : (
-          <button type="button" onClick={() => setConfirming(true)} className={btn}>
+          <HoverButton variant="ghost" onClick={() => setConfirming(true)} className="w-full">
             Annuler mon rdv
-          </button>
+          </HoverButton>
         )
       ) : (
         <p className="text-[15px] text-fg-muted">

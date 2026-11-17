@@ -4,6 +4,7 @@ import { addService, regenerateIcal, saveHours, saveService, saveSettings } from
 import { adminSettings, allServices, openingHoursRows } from "@/lib/admin/data";
 import { requireAdmin } from "@/lib/admin/session";
 import { site } from "@/config/site";
+import { HoverButton } from "@/components/ui/HoverButton";
 import { CopyField } from "./CopyField";
 
 export const metadata = { title: "Réglages" };
@@ -106,9 +107,9 @@ export default async function Settings() {
           Ce lien est privé : ne le partage pas.
         </p>
         <CopyField value={feed} />
-        <a href={feed.replace(/^https?:/, "webcal:")} className="inline-flex h-12 w-full items-center justify-center rounded-full bg-fg px-6 text-[15px] font-semibold text-bg">
+        <HoverButton href={feed.replace(/^https?:/, "webcal:")} className="w-full">
           S&apos;abonner (iPhone / Mac)
-        </a>
+        </HoverButton>
         <ActionForm action={regenerateIcal} className="space-y-2">
           <SubmitButton ghost>Générer un nouveau lien</SubmitButton>
           <p className="text-sm text-fg-muted">L&apos;ancien lien cesse de fonctionner. À utiliser si tu penses qu&apos;il a fuité.</p>

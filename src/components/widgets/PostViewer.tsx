@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
+import { HoverButton } from "@/components/ui/HoverButton";
 import { ArrowUpRightIcon, ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import type { FeedPost } from "@/lib/instagram/feed";
 import { VideoPlayer } from "./VideoPlayer";
@@ -163,15 +164,9 @@ export default function PostViewer({ posts, start, onClose }: { posts: FeedPost[
                       {slide.kind === "video" ? (
                         <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-3 bg-bg/80 px-6 py-5 text-center backdrop-blur-sm">
                           <p className="max-w-xs text-[15px] text-fg-muted">Cette vidéo se lit uniquement sur Instagram.</p>
-                          <a
-                            href={post.permalink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex h-11 items-center gap-2 rounded-full bg-fg px-5 text-[15px] font-semibold tracking-tight text-bg"
-                          >
+                          <HoverButton href={post.permalink} target="_blank" size="sm">
                             Voir la vidéo
-                            <ArrowUpRightIcon className="size-4" aria-hidden />
-                          </a>
+                          </HoverButton>
                         </div>
                       ) : null}
                     </>

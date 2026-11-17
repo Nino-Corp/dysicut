@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChatBubbleLeftIcon, ChevronLeftIcon, PhoneIcon } from "@heroicons/react/24/outline";
 import { ActionForm, ConfirmSubmit, SubmitButton } from "@/components/admin/ActionForm";
-import { btnGhost, card, input, label } from "@/components/admin/ui";
+import { card, input, label } from "@/components/admin/ui";
+import { HoverButton } from "@/components/ui/HoverButton";
+
 import { cancelBooking, markNoShow, updateDuration } from "@/lib/admin/actions";
 import { bookingById } from "@/lib/admin/data";
 import { requireAdmin } from "@/lib/admin/session";
@@ -53,12 +55,12 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
       </dl>
 
       <div className="grid grid-cols-2 gap-3">
-        <a href={`tel:${phone}`} className={btnGhost}>
-          <PhoneIcon className="size-5" aria-hidden /> Appeler
-        </a>
-        <a href={sms} className={btnGhost}>
-          <ChatBubbleLeftIcon className="size-5" aria-hidden /> Prévenir
-        </a>
+        <HoverButton href={`tel:${phone}`} variant="ghost" icon={PhoneIcon}>
+          Appeler
+        </HoverButton>
+        <HoverButton href={sms} variant="ghost" icon={ChatBubbleLeftIcon}>
+          Prévenir
+        </HoverButton>
       </div>
 
       {confirmed ? (

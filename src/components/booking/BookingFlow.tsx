@@ -7,6 +7,7 @@ import { normalizePhone } from "@/lib/booking/phone";
 import { dayLabel, timeLabel } from "@/lib/booking/time";
 import type { BookingView, PublicService } from "@/lib/booking/repo";
 import { HeroPole } from "@/components/ui/HeroPole";
+import { HoverButton } from "@/components/ui/HoverButton";
 import { BookingDetails } from "./BookingDetails";
 import { ManageActions } from "./ManageActions";
 import { readStored, writeStored } from "./storage";
@@ -229,9 +230,9 @@ export function BookingFlow({ services }: { services: PublicService[] }) {
           {avail.status === "error" ? (
             <div className="mt-10" role="alert">
               <p className="text-[17px]">{avail.message}</p>
-              <button type="button" onClick={() => void loadAvail(service)} className="mt-4 inline-flex h-12 items-center rounded-full border border-line-strong px-6 text-[15px] font-semibold">
+              <HoverButton variant="ghost" onClick={() => void loadAvail(service)} className="mt-4">
                 Réessayer
-              </button>
+              </HoverButton>
             </div>
           ) : null}
 
@@ -349,9 +350,9 @@ export function BookingFlow({ services }: { services: PublicService[] }) {
               {fieldErrors.consent ? <p className="mt-2 text-[15px]">{fieldErrors.consent}</p> : null}
             </div>
 
-            <button type="submit" disabled={submitting} className="inline-flex h-14 w-full items-center justify-center rounded-full bg-fg text-[17px] font-semibold tracking-tight text-bg transition-[transform,opacity] duration-[var(--dur)] hover:opacity-90 active:scale-[0.98] disabled:opacity-60">
+            <HoverButton type="submit" size="lg" disabled={submitting} className="w-full">
               {submitting ? "Réservation..." : `Confirmer, ${service.priceEur} € sur place`}
-            </button>
+            </HoverButton>
           </form>
         </section>
       ) : null}

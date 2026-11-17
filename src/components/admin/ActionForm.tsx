@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import type { ActionState } from "@/lib/admin/types";
-import { btnGhost, btnPrimary } from "./ui";
+import { HoverButton } from "@/components/ui/HoverButton";
 
 type Props = {
   action: (prev: ActionState, data: FormData) => Promise<ActionState>;
@@ -28,9 +28,9 @@ export function ActionForm({ action, children, className = "space-y-4" }: Props)
 export function SubmitButton({ children, ghost = false }: { children: React.ReactNode; ghost?: boolean }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} className={ghost ? btnGhost : btnPrimary}>
+    <HoverButton type="submit" variant={ghost ? "ghost" : "primary"} disabled={pending} className="w-full">
       {pending ? "..." : children}
-    </button>
+    </HoverButton>
   );
 }
 
@@ -40,19 +40,19 @@ export function ConfirmSubmit({ children, confirmLabel }: { children: React.Reac
   const { pending } = useFormStatus();
   if (!armed) {
     return (
-      <button type="button" onClick={() => setArmed(true)} className={btnGhost}>
+      <HoverButton variant="ghost" onClick={() => setArmed(true)} className="w-full">
         {children}
-      </button>
+      </HoverButton>
     );
   }
   return (
     <div className="flex gap-2">
-      <button type="button" onClick={() => setArmed(false)} className={btnGhost}>
+      <HoverButton variant="ghost" onClick={() => setArmed(false)} className="w-full">
         Retour
-      </button>
-      <button type="submit" disabled={pending} className={btnPrimary}>
+      </HoverButton>
+      <HoverButton type="submit" disabled={pending} className="w-full">
         {pending ? "..." : confirmLabel}
-      </button>
+      </HoverButton>
     </div>
   );
 }

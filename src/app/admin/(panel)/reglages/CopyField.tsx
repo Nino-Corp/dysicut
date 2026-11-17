@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { CheckIcon, ClipboardDocumentIcon } from "@heroicons/react/24/outline";
-import { btnGhost, input, label } from "@/components/admin/ui";
+import { input, label } from "@/components/admin/ui";
+import { HoverButton } from "@/components/ui/HoverButton";
+
 
 export function CopyField({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
@@ -10,9 +12,10 @@ export function CopyField({ value }: { value: string }) {
     <div className="space-y-2">
       <label htmlFor="feed" className={label}>Lien d&apos;abonnement</label>
       <input id="feed" readOnly value={value} onFocus={(e) => e.currentTarget.select()} className={`${input} text-sm`} />
-      <button
-        type="button"
-        className={btnGhost}
+      <HoverButton
+        variant="ghost"
+        icon={copied ? CheckIcon : ClipboardDocumentIcon}
+        className="w-full"
         onClick={async () => {
           try {
             await navigator.clipboard.writeText(value);
@@ -23,9 +26,8 @@ export function CopyField({ value }: { value: string }) {
           }
         }}
       >
-        {copied ? <CheckIcon className="size-5" aria-hidden /> : <ClipboardDocumentIcon className="size-5" aria-hidden />}
         {copied ? "Copié" : "Copier le lien"}
-      </button>
+      </HoverButton>
     </div>
   );
 }

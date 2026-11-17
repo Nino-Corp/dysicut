@@ -1,9 +1,10 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { LogoMark } from "@/components/ui/LogoMark";
 import { ActionForm, SubmitButton } from "@/components/admin/ActionForm";
-import { btnGhost, input, label } from "@/components/admin/ui";
+import { input, label } from "@/components/admin/ui";
+import { HoverButton } from "@/components/ui/HoverButton";
+
 import { login } from "@/lib/admin/actions";
 import { isAdmin } from "@/lib/admin/session";
 
@@ -26,10 +27,9 @@ export default async function LoginPage() {
         </div>
         <SubmitButton>Se connecter</SubmitButton>
       </ActionForm>
-      <Link href="/" className={`${btnGhost} mt-3`}>
-        <ArrowLeftIcon className="size-5" aria-hidden />
+      <HoverButton href="/" variant="ghost" icon={ArrowLeftIcon} className="mt-3 w-full">
         Retourner sur le site
-      </Link>
+      </HoverButton>
     </main>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { site } from "@/config/site";
+import { HoverButton } from "@/components/ui/HoverButton";
 import { BookingFlow } from "@/components/booking/BookingFlow";
 import { BookingShell } from "@/components/booking/BookingShell";
 import { getConfig, type BookingConfig } from "@/lib/booking/repo";
@@ -25,14 +26,9 @@ export default async function Reserver() {
         <section>
           <h1 className="mt-8 text-[clamp(2rem,8vw,3rem)] font-bold tracking-[-0.04em]">Réservation indisponible</h1>
           <p className="mt-4 text-[17px] text-fg-muted">La réservation en ligne est fermée pour le moment. Écris-nous en message pour prendre rdv.</p>
-          <a
-            href={site.social.instagramDm}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-8 inline-flex h-14 items-center justify-center rounded-full bg-fg px-8 text-[17px] font-semibold tracking-tight text-bg"
-          >
+          <HoverButton href={site.social.instagramDm} target="_blank" size="lg" className="mt-8">
             Écrire sur Instagram
-          </a>
+          </HoverButton>
         </section>
       )}
     </BookingShell>
