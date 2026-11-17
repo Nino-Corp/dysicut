@@ -341,7 +341,7 @@ export function BookingFlow({ services }: { services: PublicService[] }) {
                 <input type="checkbox" checked={form.consent} onChange={set("consent")} aria-invalid={!!fieldErrors.consent} className="mt-0.5 size-6 shrink-0 accent-fg" />
                 <span>
                   J&apos;accepte que mon prénom, mon téléphone et mon email servent à gérer ce rendez-vous.{" "}
-                  <Link href="/mentions-legales#donnees-personnelles" target="_blank" className="underline underline-offset-4">
+                  <Link href="/confidentialite" target="_blank" className="underline underline-offset-4">
                     En savoir plus
                   </Link>
                 </span>

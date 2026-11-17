@@ -49,25 +49,10 @@ export default function MentionsLegales() {
           </p>
         </Block>
 
-        <Block id="donnees-personnelles" title="Données personnelles">
-          <p>Responsable du traitement : {todo(legal.ownerName)}, {site.name}.</p>
+        <Block id="donnees-personnelles" title="Données personnelles et cookies">
           <p>
-            Lors d&apos;une réservation, nous collectons ton prénom, ton numéro de téléphone et, si tu le souhaites, ton adresse email, ainsi que la prestation et l&apos;horaire choisis. Ces données servent uniquement à gérer ton rendez-vous : le confirmer, te prévenir en cas de changement et t&apos;envoyer un rappel. Base légale : l&apos;exécution de ta demande de rendez-vous.
-          </p>
-          <p>
-            Elles sont conservées 12 mois après le rendez-vous, puis supprimées. Elles ne sont ni vendues ni utilisées pour de la publicité. Elles sont traitées par nos prestataires techniques, uniquement pour faire fonctionner le service : hébergement et base de données, envoi d&apos;emails.
-          </p>
-          <p>
-            Tu peux demander à tout moment l&apos;accès, la correction ou la suppression de tes données, en écrivant à {todo(legal.contactEmail)}. En cas de désaccord, tu peux saisir la CNIL (<a className="underline" href="https://www.cnil.fr">cnil.fr</a>).
-          </p>
-        </Block>
-
-        <Block title="Cookies et stockage local">
-          <p>
-            Le site n&apos;utilise ni cookie publicitaire ni outil de mesure d&apos;audience. Ton navigateur conserve uniquement de quoi faire fonctionner le site : le fait d&apos;avoir vu l&apos;animation d&apos;accueil et, si tu réserves, le lien de ton rendez-vous pour pouvoir l&apos;annuler.
-          </p>
-          <p>
-            La carte et les contenus Instagram ne se chargent que si tu le demandes ou depuis les serveurs du site. Si tu affiches la carte, Google Maps peut déposer ses propres cookies.
+            Les données collectées lors d&apos;une réservation, leur durée de conservation, tes droits (accès, correction, suppression) et l&apos;usage du stockage local sont détaillés dans la{" "}
+            <Link className="underline underline-offset-4" href="/confidentialite">politique de confidentialité</Link>.
           </p>
         </Block>
 

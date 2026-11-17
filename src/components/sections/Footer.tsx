@@ -35,6 +35,7 @@ export function Footer() {
           </li>
           <li><a href={site.social.instagramDm} target="_blank" rel="noopener noreferrer" className={link}>Écrire en message privé</a></li>
           <li><Link href="/mentions-legales" className={link}>Mentions légales</Link></li>
+          <li><Link href="/confidentialite" className={link}>Confidentialité</Link></li>
         </ul>
       </div>
       <p className="mx-auto mt-12 max-w-[1400px] text-sm text-fg-muted">© {new Date().getFullYear()} {site.name}</p>
