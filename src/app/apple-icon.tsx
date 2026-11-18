@@ -13,7 +13,7 @@ export default async function AppleIcon() {
     (
       <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#0a0a0a" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={logo} width={128} height={128} alt="" />
+        <img src={logo} width={128} height={128} alt="" style={{ transform: `translate(${128 * 0.036}px, ${-128 * 0.058}px)` }} />
       </div>
     ),
     size,

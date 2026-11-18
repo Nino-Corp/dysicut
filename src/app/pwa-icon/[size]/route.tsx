@@ -15,7 +15,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ size: s
     (
       <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#0a0a0a" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={logo} width={inner} height={inner} alt="" />
+        <img src={logo} width={inner} height={inner} alt="" style={{ transform: `translate(${inner * 0.036}px, ${-inner * 0.058}px)` }} />
       </div>
     ),
     { width: px, height: px, headers: { "Cache-Control": "public, max-age=31536000, immutable" } },
