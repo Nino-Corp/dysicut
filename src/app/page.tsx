@@ -2,7 +2,7 @@ import { Nav } from "@/components/sections/Nav";
 import { MyBookingBanner } from "@/components/booking/MyBookingBanner";
 import { StickyBookBar } from "@/components/sections/StickyBookBar";
 import { Hero } from "@/components/sections/Hero";
-import { PoleIntro } from "@/components/sections/PoleIntro";
+import { CutIntro } from "@/components/sections/CutIntro";
 import { Cuts } from "@/components/sections/Cuts";
 import { Social } from "@/components/sections/Social";
 import { Pricing } from "@/components/sections/Pricing";
@@ -22,7 +22,7 @@ export default async function Home() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
-      <PoleIntro />
+      <CutIntro />
       <Nav />
       <MyBookingBanner />
       <main>

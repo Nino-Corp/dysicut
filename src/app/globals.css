@@ -96,15 +96,56 @@ h1, h2, h3 {
   --breakpoint-nav: 700px;
 }
 
-/* Tiroir plein écran (dialog natif : focus piégé, Échap, fond inerte). */
-.drawer::backdrop { background: var(--bg); }
-.drawer[open] { animation: drawer-in var(--dur) var(--ease); }
+html { -webkit-tap-highlight-color: transparent; }
+
+/* Burger « lame » : deux traits (le second plus court) qui se croisent en X au clic. */
+.burger { position: relative; display: block; width: 24px; height: 24px; }
+.burger-bar {
+  position: absolute; left: 0; top: 11px; width: 24px; height: 2px; border-radius: 2px;
+  background: var(--fg);
+  transition: translate 450ms var(--ease), scale 450ms var(--ease), rotate 450ms var(--ease), background-color 300ms var(--ease);
+}
+.burger-bar-a { translate: 0 -4px; }
+.burger-bar-b { translate: 5px 4px; scale: 0.58 1; background: var(--fg-muted); }
+.burger-btn { transition: background-color 300ms var(--ease), transform 300ms var(--ease); }
+.burger-btn:active { transform: scale(0.92); background: var(--line); }
+.burger-btn:active .burger-bar-b { scale: 1 1; translate: 0 4px; }
+.burger[data-open="true"] .burger-bar-a { translate: 0 0; rotate: 45deg; }
+.burger[data-open="true"] .burger-bar-b { translate: 0 0; scale: 1 1; rotate: -45deg; }
+
+/* Tiroir plein écran (dialog natif : focus piégé, Échap, fond inerte).
+   Ouverture : un bord diagonal (pente de la lame) balaie l'écran de droite à gauche. */
+.drawer::backdrop { background: transparent; }
+.drawer { position: fixed; inset: 0; border: 0; overflow: hidden; }
+.drawer[open] { animation: drawer-in 560ms var(--ease) both; }
+.drawer[open][data-closing] { animation: drawer-out 420ms var(--ease) both; }
 @keyframes drawer-in {
-  from { opacity: 0; transform: translateY(-8px); }
+  from { clip-path: polygon(150% 0, 150% 0, 150% 100%, 110% 100%); }
+  to { clip-path: polygon(0 0, 150% 0, 150% 100%, -40% 100%); }
+}
+@keyframes drawer-out {
+  from { clip-path: polygon(0 0, 150% 0, 150% 100%, -40% 100%); }
+  to { clip-path: polygon(150% 0, 150% 0, 150% 100%, 110% 100%); }
+}
+/* Filet diagonal du hero, repris en fond du menu. */
+.drawer-blade {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to top right, transparent calc(62% - 0.5px), var(--line-strong) 62%, transparent calc(62% + 0.5px));
+}
+/* Entrees en cascade des liens. */
+.drawer[open] .drawer-item { animation: drawer-item 600ms var(--ease) both; animation-delay: calc(140ms + var(--i, 0) * 55ms); }
+.drawer[open][data-closing] .drawer-item { animation: none; opacity: 0; transition: opacity 200ms; }
+@keyframes drawer-item {
+  from { opacity: 0; transform: translateY(28px); }
   to { opacity: 1; transform: none; }
 }
+@media (prefers-reduced-motion: reduce) {
+  .drawer[open] { animation: none; }
+  .drawer[open][data-closing] { animation: drawer-out 0.01ms both; }
+  .drawer[open] .drawer-item { animation: none; }
+}
 
-/* Barber pole : bande permanente du hero + remplissage de l'intro. Un seul détail tricolore par écran. */
+/* Barber pole : bande permanente du hero. Un seul détail tricolore par écran. */
 .pole {
   position: relative;
   background-image: repeating-linear-gradient(135deg, var(--pole-red) 0 4px, var(--pole-white) 4px 8px, var(--pole-blue) 8px 12px);
@@ -129,38 +170,26 @@ h1, h2, h3 {
 
 /* Logo du header : balayage diagonal a l'arrivee (apres l'intro si elle joue), leger soulevement au survol. */
 .nav-logo svg { animation: logo-wipe 700ms var(--ease) both; transition: transform var(--dur) var(--ease); }
-html[data-intro="play"] .nav-logo svg { animation-delay: 1150ms; }
+html[data-intro="play"] .nav-logo svg { animation-delay: 2050ms; }
 .nav-logo:hover svg, .nav-logo:focus-visible svg { transform: translateY(-2px) scale(1.04); }
 @keyframes logo-wipe { from { clip-path: polygon(0 0, 0 0, -30% 100%, -30% 100%); opacity: 0; } to { clip-path: polygon(0 0, 140% 0, 110% 100%, 0 100%); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .nav-logo svg { animation: none; } .logo-sheen { display: none; } }
 
-/* Hero A1 : filet diagonal ancré sur la lame du logo (point et angle mesurés sur logo.svg), halo noir par-dessus. */
-.hero-blade { top: 4rem; height: calc(100% - 4rem); }
-@media (min-width: 700px) { .hero-blade { top: 5rem; height: calc(100% - 5rem); } }
-.hero-blade line { stroke: var(--line-strong); stroke-width: 1; vector-effect: non-scaling-stroke; }
-/* Ombre plein cadre (maquette A1) : au-dessus du filet (z -2), sous le contenu. Elle estompe le filet autour du logo. */
-.hero-shade { z-index: -1; top: 4rem; background: radial-gradient(ellipse at 50% 38%, var(--bg) 0, var(--bg) 34%, transparent 100%); }
-@media (min-width: 700px) { .hero-shade { top: 5rem; } }
-html[data-intro="play"] .hero-blade { clip-path: inset(0 100% 0 0); }
-.hero-blade[data-draw] { animation: blade-draw 450ms var(--ease) 2100ms forwards; }
-@keyframes blade-draw { to { clip-path: inset(0 0 0 0); } }
 
 /* Intro : cachée par défaut, activée par html[data-intro="play"] (script inline du <head>).
    Non interactive, au-dessus de la nav. Filet de sécurité CSS si le JS échoue. */
 .intro { display: none; position: fixed; inset: 0; z-index: 50; pointer-events: none; }
-html[data-intro="play"] .intro { display: block; animation: intro-failsafe 0s linear 3.5s forwards; }
+html[data-intro="play"] .intro { display: block; animation: intro-failsafe 0s linear 4.5s forwards; }
 /* visibility seulement : une animation d'opacity sur la racine forcerait tout l'overlay dans une texture plein écran. */
 @keyframes intro-failsafe { to { visibility: hidden; } }
-.intro-back { position: absolute; inset: 0; background: var(--bg); }
-/* Pole de l'intro (construit dans src/lib/poleRender.ts) : 84 x 464 px, tout en transform => compositeur GPU. */
-.intro-rig { position: absolute; width: 84px; height: 464px; transform-origin: 50% 50%; opacity: 0; will-change: transform, opacity; }
+.intro-half { position: absolute; inset: 0; background: var(--bg); will-change: transform, opacity; }
+.intro-logo { position: absolute; left: 50%; top: 50%; width: min(74vw, 460px); height: auto; margin: 0; translate: -50% -50%; opacity: 0; user-select: none; }
+/* Tube du pole (construit dans src/lib/poleRender.ts), utilise par la bande du hero. */
 .pole-tube { position: absolute; overflow: hidden; contain: strict; }
-.pole-stripes { position: absolute; left: 0; top: 0; width: 100%; background-repeat: repeat-y; will-change: transform;}
+.pole-stripes { position: absolute; left: 0; top: 0; width: 100%; background-repeat: repeat-y; will-change: transform; }
 .pole-cover { position: absolute; inset: 0; width: 84px; height: 464px; }
-
-/* Pendant l'intro, rien d'autre ne s'anime sous l'overlay (moins de travail par image). */
-/* La bande du hero reste cachée pendant l'intro : c'est le pole de l'intro qui s'y installe. */
-html[data-intro="play"] #hero-pole { visibility: hidden; }
+/* Filet de coupe : 1 px, meme trait que celui du hero. */
+.intro-line { position: absolute; height: 1px; background: var(--fg); opacity: 0; transform-origin: 50% 50%; clip-path: inset(0 100% 0 0); }
 
 /* Reveal au scroll : fondu + léger décalage. Visible d'emblée en reduced-motion ou sans JS. */
 @media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
@@ -171,3 +200,39 @@ html[data-intro="play"] #hero-pole { visibility: hidden; }
   }
   [data-reveal][data-in] { opacity: 1; transform: none; }
 }
+
+
+/* En-tete de section (SectionHead) : filet trace + titre qui monte d'un masque. Visible d'emblee en reduced-motion ou sans JS. */
+@media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  [data-head-rule] { transform: scaleX(0); transform-origin: left; transition: transform 900ms var(--ease); }
+  [data-head-title] { transform: translateY(105%); transition: transform 800ms var(--ease) 120ms; }
+  [data-head][data-in] [data-head-rule] { transform: none; }
+  [data-head][data-in] [data-head-title] { transform: none; }
+}
+
+/* Tarifs : ligne de menu, le nom glisse et un filet blanc se trace au survol / focus. */
+.menu-row { position: relative; }
+.menu-row::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: var(--fg); transform: scaleX(0); transform-origin: left; transition: transform 500ms var(--ease); }
+@media (hover: hover) {
+  .menu-row:hover::after, .menu-row:focus-within::after { transform: none; }
+  .menu-row [data-menu-name] { transition: transform 500ms var(--ease); }
+  .menu-row:hover [data-menu-name], .menu-row:focus-within [data-menu-name] { transform: translateX(14px); }
+}
+
+/* Hero : logo complet tranche le long de la lame du D (pente 1.126, boite 867 x 617). Les deux calques sont decoupes par le meme polygone. */
+.hero-cut { width: min(86vw, 58dvh); aspect-ratio: 867 / 617; }
+@media (min-width: 700px) { .hero-cut { width: min(46vw, 72dvh); } }
+.hero-cut-a { clip-path: polygon(-30% -60%, 130% -60%, 130% -53.3%, -30% 126.9%); }
+.hero-cut-b { clip-path: polygon(-30% 126.9%, 130% -53.3%, 130% 160%, -30% 160%); }
+
+/* Lien de nav « lame » : libelle coupe en diagonale de coin a coin, moities qui glissent le long de la coupe. */
+.cut-link-box { position: relative; display: inline-block; }
+.cut-link-a, .cut-link-b { display: block; transition: transform 500ms var(--ease); }
+.cut-link-b { position: absolute; inset: 0; }
+.cut-link-a { clip-path: polygon(-10% -10%, 110% -10%, -10% 110%); }
+.cut-link-b { clip-path: polygon(110% -10%, 110% 110%, -10% 110%); }
+.cut-link-box::after { content: ""; position: absolute; inset: -2px -6px; pointer-events: none; background: linear-gradient(to top right, transparent calc(50% - 0.5px), currentColor 50%, transparent calc(50% + 0.5px)); clip-path: inset(0 100% 0 0); transition: clip-path 500ms var(--ease); }
+.cut-link:hover .cut-link-a, .cut-link:focus-visible .cut-link-a { transform: translate3d(-3px, 1px, 0); }
+.cut-link:hover .cut-link-b, .cut-link:focus-visible .cut-link-b { transform: translate3d(3px, -1px, 0); }
+.cut-link:hover .cut-link-box::after, .cut-link:focus-visible .cut-link-box::after { clip-path: inset(0 0 0 0); }
+@media (prefers-reduced-motion: reduce) { .cut-link-a, .cut-link-b, .cut-link-box::after { transition: none; } }
