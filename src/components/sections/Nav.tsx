@@ -1,88 +1,112 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useRef } from "react";
-import { Bars2Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowUpRightIcon } from "@heroicons/react/24/outline";
 import { navLinks } from "@/config/nav";
 import { site } from "@/config/site";
 import { LogoMark } from "@/components/ui/LogoMark";
 import { BookButton } from "@/components/ui/BookButton";
+import { ScrollLink } from "@/components/ui/ScrollLink";
 import { OpenStatus } from "@/components/widgets/OpenStatus";
+
+/** Burger « lame » : deux traits (le second plus court) qui se croisent en X, un blanc et un gris comme le logo. */
+function Burger({ open }: { open: boolean }) {
+  return (
+    <span aria-hidden data-open={open} className="burger">
+      <span className="burger-bar burger-bar-a" />
+      <span className="burger-bar burger-bar-b" />
+    </span>
+  );
+}
 
 export function Nav() {
   const drawer = useRef<HTMLDialogElement>(null);
   const header = useRef<HTMLElement>(null);
-  const inner = useRef<HTMLElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
 
-  const open = () => {
-    drawer.current?.showModal();
+  const show = useCallback(() => {
+    const el = drawer.current;
+    if (!el || el.open) return;
+    el.removeAttribute("data-closing");
+    el.showModal();
     document.documentElement.style.overflow = "hidden";
-  };
-  const close = () => drawer.current?.close();
+    setOpen(true);
+  }, []);
+
+  // Fermeture animee : on bascule data-closing, la fin de l'animation ferme le dialog.
+  const close = useCallback(() => {
+    const el = drawer.current;
+    if (!el || !el.open || el.hasAttribute("data-closing")) return;
+    el.setAttribute("data-closing", "");
+    document.documentElement.style.overflow = "";
+    setOpen(false);
+  }, []);
 
   useEffect(() => {
     const el = drawer.current;
-    const onClose = () => {
-      document.documentElement.style.overflow = "";
+    if (!el) return;
+    const onEnd = (e: AnimationEvent) => {
+      if (e.target === el && el.hasAttribute("data-closing")) {
+        el.close();
+        el.removeAttribute("data-closing");
+        trigger.current?.focus({ preventScroll: true });
+      }
     };
-    // Repasse en desktop avec le tiroir ouvert : on le ferme.
+    // Echap : meme fermeture animee que le bouton.
+    const onCancel = (e: Event) => {
+      e.preventDefault();
+      close();
+    };
+    // Repasse en desktop avec le tiroir ouvert : fermeture immediate.
     const mq = window.matchMedia("(min-width: 700px)");
-    const onMq = () => mq.matches && el?.open && el.close();
-    el?.addEventListener("close", onClose);
+    const onMq = () => {
+      if (mq.matches && el.open) {
+        el.removeAttribute("data-closing");
+        el.close();
+        document.documentElement.style.overflow = "";
+        setOpen(false);
+      }
+    };
+    el.addEventListener("animationend", onEnd);
+    el.addEventListener("cancel", onCancel);
     mq.addEventListener("change", onMq);
     return () => {
-      el?.removeEventListener("close", onClose);
+      el.removeEventListener("animationend", onEnd);
+      el.removeEventListener("cancel", onCancel);
       mq.removeEventListener("change", onMq);
       document.documentElement.style.overflow = "";
     };
-  }, []);
+  }, [close]);
 
-  // Header fixe : suit le scroll (disparait vers le bas, reapparait des qu'on remonte), contenu en leger decalage (parallaxe).
+  // Header fixe et statique : toujours visible ; seul l'etat "scrolled" (filet/ombre) est bascule.
   useEffect(() => {
     const h = header.current;
-    const n = inner.current;
-    if (!h || !n) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let last = window.scrollY;
-    let offset = 0;
-    let raf = 0;
-    const apply = () => {
-      raf = 0;
-      const max = h.offsetHeight + 24; // + marge pour l'ombre
-      const y = Math.max(0, window.scrollY);
-      const delta = y - last;
-      last = y;
-      offset = y <= 0 ? 0 : Math.min(max, Math.max(0, offset + delta));
-      h.style.transform = `translate3d(0, ${-offset}px, 0)`;
-      if (!reduce) n.style.transform = `translate3d(0, ${-offset * 0.35}px, 0)`;
-      h.toggleAttribute("data-scrolled", y > 8);
-    };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(apply);
-    };
+    if (!h) return;
+    const apply = () => h.toggleAttribute("data-scrolled", window.scrollY > 8);
     apply();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (raf) cancelAnimationFrame(raf);
-    };
+    window.addEventListener("scroll", apply, { passive: true });
+    return () => window.removeEventListener("scroll", apply);
   }, []);
 
   return (
-    <header ref={header} className="site-header fixed inset-x-0 top-0 z-30 bg-surface will-change-transform">
-      <nav ref={inner} aria-label="Navigation principale" className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-5 nav:h-20 nav:px-14">
-        <Link href="/" aria-label={`${site.name}, accueil`} className="nav-logo flex min-h-11 items-center">
+    <header ref={header} className="site-header fixed inset-x-0 top-0 z-30 bg-surface">
+      <nav aria-label="Navigation principale" className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-5 nav:h-20 nav:px-14">
+        <ScrollLink href="/#accueil" aria-label={`${site.name}, accueil`} className="nav-logo flex min-h-11 items-center">
           <LogoMark className="h-11 w-auto nav:h-12" />
-        </Link>
+        </ScrollLink>
 
         <OpenStatus className="nav:hidden" />
 
         <ul className="hidden items-center gap-8 nav:flex">
           {navLinks.map((l) => (
             <li key={l.href}>
-              <Link href={l.href} className="flex min-h-11 items-center text-sm text-fg/80 transition-colors duration-[var(--dur)] hover:text-fg">
-                {l.label}
-              </Link>
+              <ScrollLink href={l.href} className="cut-link flex min-h-11 items-center text-sm text-fg/80 transition-colors duration-[var(--dur)] hover:text-fg">
+                <span className="cut-link-box">
+                  <span className="cut-link-a">{l.label}</span>
+                  <span aria-hidden className="cut-link-b">{l.label}</span>
+                </span>
+              </ScrollLink>
             </li>
           ))}
           <li>
@@ -91,12 +115,15 @@ export function Nav() {
         </ul>
 
         <button
+          ref={trigger}
           type="button"
-          onClick={open}
+          onClick={show}
           aria-label="Ouvrir le menu"
-          className="-mr-3 flex size-12 items-center justify-center nav:hidden"
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          className="burger-btn -mr-2 flex size-12 items-center justify-center rounded-full nav:hidden"
         >
-          <Bars2Icon className="size-6" />
+          <Burger open={false} />
         </button>
       </nav>
 
@@ -106,24 +133,54 @@ export function Nav() {
         onClick={(e) => e.target === e.currentTarget && close()}
         className="drawer m-0 h-dvh max-h-none w-screen max-w-none bg-bg p-0 text-fg"
       >
-        <div className="flex h-full flex-col px-5 pb-8">
+        <div aria-hidden className="drawer-blade" />
+        <div className="relative flex h-full flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
           <div className="flex h-16 items-center justify-between">
-            <span className="text-[15px] font-semibold tracking-tight">{site.name}</span>
-            <button type="button" onClick={close} aria-label="Fermer le menu" className="-mr-3 flex size-12 items-center justify-center">
-              <XMarkIcon className="size-6" />
+            <ScrollLink href="/#accueil" onClick={close} aria-label={`${site.name}, accueil`} className="flex min-h-11 items-center">
+              <LogoMark className="h-11 w-auto" />
+            </ScrollLink>
+            <button
+              type="button"
+              onClick={close}
+              aria-label="Fermer le menu"
+              className="burger-btn -mr-2 flex size-12 items-center justify-center rounded-full"
+            >
+              <Burger open />
             </button>
           </div>
-          <ul className="mt-6 flex flex-1 flex-col">
-            {navLinks.map((l) => (
-              <li key={l.href} className="border-b border-line">
-                <Link href={l.href} onClick={close} className="flex min-h-[72px] items-center text-[34px] font-semibold tracking-[-0.035em]">
-                  {l.label}
-                </Link>
+
+          <ul className="mt-4 flex flex-1 flex-col justify-center">
+            {navLinks.map((l, i) => (
+              <li key={l.href} className="drawer-item" style={{ "--i": i } as React.CSSProperties}>
+                <ScrollLink
+                  href={l.href}
+                  onClick={close}
+                  className="drawer-link group flex min-h-[76px] items-baseline gap-4 border-b border-line py-3"
+                >
+                  <span className="w-6 text-[13px] tabular-nums text-fg-muted">0{i + 1}</span>
+                  <span className="text-[42px] font-semibold leading-none tracking-[-0.045em] transition-transform duration-[var(--dur)] ease-[var(--ease)] group-active:translate-x-2">
+                    {l.label}
+                  </span>
+                </ScrollLink>
               </li>
             ))}
           </ul>
-          <OpenStatus className="mb-5" />
-          <BookButton size="lg" className="w-full" />
+
+          <div className="drawer-item" style={{ "--i": navLinks.length } as React.CSSProperties}>
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <OpenStatus />
+              <a
+                href={site.social.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-11 items-center gap-1.5 text-[13px] text-fg-muted"
+              >
+                @{site.social.instagramHandle}
+                <ArrowUpRightIcon className="size-3.5" aria-hidden />
+              </a>
+            </div>
+            <BookButton size="lg" className="w-full" />
+          </div>
         </div>
       </dialog>
     </header>
