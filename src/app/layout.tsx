@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   title: { default: site.name, template: `%s | ${site.name}` },
   description,
   applicationName: site.name,
+  appleWebApp: { capable: true, title: site.name, statusBarStyle: "black" },
+  formatDetection: { telephone: false },
   alternates: { canonical: "/" },
   openGraph: { siteName: site.name, locale: "fr_FR", type: "website", url: "/", title: site.name, description },
   twitter: { card: "summary_large_image", title: site.name, description },
