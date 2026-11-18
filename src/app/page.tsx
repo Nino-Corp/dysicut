@@ -1,6 +1,7 @@
 import { Nav } from "@/components/sections/Nav";
 import { MyBookingBanner } from "@/components/booking/MyBookingBanner";
 import { StickyBookBar } from "@/components/sections/StickyBookBar";
+import { InstallPrompt } from "@/components/widgets/InstallPrompt";
 import { Hero } from "@/components/sections/Hero";
 import { CutIntro } from "@/components/sections/CutIntro";
 import { Cuts } from "@/components/sections/Cuts";
@@ -35,6 +36,7 @@ export default async function Home() {
       </main>
       <Footer />
       <StickyBookBar />
+      <InstallPrompt />
     </>
   );
 }

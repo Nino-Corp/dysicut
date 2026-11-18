@@ -236,3 +236,8 @@ html[data-intro="play"] .intro { display: block; animation: intro-failsafe 0s li
 .cut-link:hover .cut-link-b, .cut-link:focus-visible .cut-link-b { transform: translate3d(3px, -1px, 0); }
 .cut-link:hover .cut-link-box::after, .cut-link:focus-visible .cut-link-box::after { clip-path: inset(0 0 0 0); }
 @media (prefers-reduced-motion: reduce) { .cut-link-a, .cut-link-b, .cut-link-box::after { transition: none; } }
+
+/* Bulle d'installation : apparition douce depuis le bas. */
+.install-prompt { animation: install-in 500ms var(--ease) both; }
+@keyframes install-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .install-prompt { animation: none; } }
