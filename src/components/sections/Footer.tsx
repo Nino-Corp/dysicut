@@ -12,7 +12,7 @@ export function Footer() {
         <div>
           <LogoMark className="h-14 w-auto" />
           <p className="mt-5 text-[15px] text-fg-muted">
-            {site.name} · {site.city}
+            {site.name} · {site.city} · {site.address.district}
             <br />
             Sur rendez-vous
           </p>
@@ -20,7 +20,7 @@ export function Footer() {
 
         <nav aria-label="Pied de page">
           <ul>
-            <li><Link href={bookingHref} className={`${link} !text-fg font-semibold`}>Prendre rdv</Link></li>
+            <li><Link href={bookingHref} className={`${link} !text-fg font-semibold`}>Prendre RDV</Link></li>
             {navLinks.filter((l) => l.label !== "Contact").map((l) => (
               <li key={l.href}><Link href={l.href} className={link}>{l.label}</Link></li>
             ))}

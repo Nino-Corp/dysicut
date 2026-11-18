@@ -128,7 +128,7 @@ ${poleBand()}
 ${rows ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:4px">${rows}</table>` : ""}
 ${buttons}${after}
 </td></tr>
-<tr><td style="padding:24px 28px 28px"><div style="border-top:1px solid ${C.line};padding-top:16px;color:${C.muted};font-family:${FONT};font-size:12px;letter-spacing:.04em">${esc(site.name)} &middot; Marseille &middot; sur rendez-vous</div></td></tr></table>
+<tr><td style="padding:24px 28px 28px"><div style="border-top:1px solid ${C.line};padding-top:16px;color:${C.muted};font-family:${FONT};font-size:12px;letter-spacing:.04em">${esc(site.name)} &middot; Marseille &middot; ${esc(site.address.district)} &middot; Sur rendez-vous</div></td></tr></table>
 </td></tr></table></td></tr></table></body></html>`;
 
   const text = [
@@ -240,7 +240,7 @@ export function clientCancelled(b: BookingRow, by: "barber" | "client"): Mail {
     title: "Rdv annulé",
     intro: by === "barber" ? `Salut ${esc(b.first_name)}, ce rdv est annulé. Désolé pour le dérangement.` : `Salut ${esc(b.first_name)}, ton rdv est bien annulé.`,
     facts: [["Prestation", esc(b.service_name)]],
-    primary: { label: "Reprendre rdv", href: `${site.url}/reserver` },
+    primary: { label: "Reprendre RDV", href: `${site.url}/reserver` },
   });
   return { to: b.email!, subject: `Rdv annulé : ${when(b)}`, html, text };
 }

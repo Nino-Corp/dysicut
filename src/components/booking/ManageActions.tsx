@@ -60,7 +60,7 @@ export function ManageActions({ token, booking }: Props) {
       <div className="space-y-4">
         <p className="text-[17px]">{view.status === "no_show" ? "Ce rendez-vous est clos." : "Ce rendez-vous est annulé. Le créneau est libre."}</p>
         <HoverButton href="/reserver" variant="ghost" className="w-full">
-          Reprendre rdv
+          Reprendre RDV
         </HoverButton>
       </div>
     );

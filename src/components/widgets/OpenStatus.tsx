@@ -17,9 +17,9 @@ export function OpenStatus({ className = "" }: { className?: string }) {
   const label = !status
     ? " "
     : status.open
-      ? `Ouvert · jusqu'à ${status.closesAt}`
+      ? `Ouvert · Jusqu'à ${status.closesAt}`
       : status.next
-        ? `Fermé · rouvre ${status.next.dayLabel} ${status.next.time}`
+        ? `Fermé · Rouvre ${status.next.dayLabel} ${status.next.time}`
         : "Fermé";
 
   return (

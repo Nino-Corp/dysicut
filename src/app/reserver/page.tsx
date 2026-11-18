@@ -5,7 +5,7 @@ import { BookingFlow } from "@/components/booking/BookingFlow";
 import { BookingShell } from "@/components/booking/BookingShell";
 import { getConfig, type BookingConfig } from "@/lib/booking/repo";
 
-export const metadata: Metadata = { title: "Prendre rdv", description: `Réserve ton créneau chez ${site.name}, ${site.city}.` };
+export const metadata: Metadata = { title: "Prendre RDV", description: `Réserve ton créneau chez ${site.name}, ${site.city}.` };
 
 // Lit les prestations en base à chaque visite : un changement fait dans /admin est visible tout de suite.
 export const dynamic = "force-dynamic";

@@ -20,7 +20,7 @@ export default async function Image() {
           <div style={{ flex: 1, background: "#f5f5f7" }} />
           <div style={{ flex: 1, background: "#1F4E9C" }} />
         </div>
-        <div style={{ marginTop: 28, fontSize: 34, color: "#86868b", letterSpacing: 2 }}>{`${site.city} · sur rendez-vous`}</div>
+        <div style={{ marginTop: 28, fontSize: 34, color: "#86868b", letterSpacing: 2 }}>{`${site.city} · ${site.address.district} · Sur rendez-vous`}</div>
       </div>
     ),
     size,

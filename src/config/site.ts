@@ -5,7 +5,6 @@
 
 export const site = {
   name: "Dysicut",
-  tagline: "Une coupe nette. Rien de plus.", // provisoire
   city: "Marseille",
   locale: "fr-FR",
   timezone: "Europe/Paris",
@@ -20,6 +19,7 @@ export const site = {
     street: "35-29 Chem. des Campanules",
     postalCode: "13012",
     city: "Marseille",
+    district: "Les Caillols",
     // Position du numéro 35 telle que localisée par Google Maps (adresse provisoire). TODO à corriger avec l'adresse exacte.
     coords: { lat: 43.30026, lon: 5.44854 },
   },
