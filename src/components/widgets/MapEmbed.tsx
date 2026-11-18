@@ -133,7 +133,7 @@ export function MapEmbed({ lat, lon, mapsUrl }: { lat: number; lon: number; maps
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Ouvrir l'emplacement du studio dans Google Maps"
-        className="relative block aspect-[4/3] overflow-hidden rounded-card border border-line bg-[var(--map-land)] transition-colors duration-[var(--dur)] hover:border-line-strong"
+        className="relative block aspect-[4/3] nav:aspect-[2/1] overflow-hidden rounded-card border border-line bg-[var(--map-land)] transition-colors duration-[var(--dur)] hover:border-line-strong"
       >
         <div ref={box} aria-hidden className="absolute inset-0" />
         {/* eslint-disable-next-line @next/next/no-img-element */}

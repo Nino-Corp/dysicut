@@ -1,13 +1,16 @@
 import { reviews } from "@/config/reviews";
+import { SectionHead } from "@/components/ui/SectionHead";
 import { Reveal } from "@/components/ui/Reveal";
 
 const EMPTY_SLOTS = 3;
 
 export function Reviews() {
+  // Pas d'emplacements vides : la section n'apparait que quand il y a de vrais avis.
+  if (reviews.length === 0) return null;
   return (
-    <section id="avis" className="scroll-mt-4 border-t border-line px-5 py-24 nav:px-14 nav:py-32">
-      <div className="mx-auto max-w-[1400px]">
-        <h2 className="text-[clamp(2.25rem,6vw,4.5rem)] font-bold tracking-[-0.04em]">Avis</h2>
+    <section id="avis" className="scroll-mt-4 border-t border-line px-5 py-24 nav:flex nav:min-h-dvh nav:flex-col nav:justify-center nav:px-14 nav:py-20">
+      <div className="mx-auto w-full max-w-[1400px]">
+        <SectionHead n="04" label="Avis" />
 
         <ul className="mt-12 grid gap-3 nav:grid-cols-3 nav:gap-5">
           {reviews.length > 0

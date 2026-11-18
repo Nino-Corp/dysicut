@@ -35,7 +35,7 @@ export function PostGrid({ posts }: { posts: FeedPost[] }) {
 
   return (
     <>
-      <ul className="mt-12 grid grid-cols-2 gap-3 nav:grid-cols-3 nav:gap-5">
+      <ul className="mt-12 lg:mt-0 grid nav:[&>li:nth-child(3n+2)]:mt-10 grid-cols-2 gap-3 nav:grid-cols-3 nav:gap-5">
         {posts.map((p, i) => (
           <Reveal as="li" key={p.id} delay={(i % 3) * 0.06} className="relative overflow-hidden rounded-card bg-surface">
             <a
@@ -59,7 +59,8 @@ export function PostGrid({ posts }: { posts: FeedPost[] }) {
                 alt=""
                 width={p.width}
                 height={p.height}
-                sizes="(min-width: 700px) 33vw, 50vw"
+                sizes="(min-width: 1024px) 25vw, (min-width: 700px) 33vw, 50vw"
+                loading={i < 2 ? "eager" : undefined}
                 className="aspect-[4/5] size-full object-cover transition-transform duration-500 ease-[var(--ease)] group-hover:scale-[1.03]"
               />
               {p.isVideo || p.isCarousel ? (
