@@ -30,6 +30,8 @@ export function Nav() {
     if (!el || el.open) return;
     el.removeAttribute("data-closing");
     el.showModal();
+    // Évite que le logo reçoive le focus (et son cadre blanc) à l'ouverture.
+    el.focus({ preventScroll: true });
     document.documentElement.style.overflow = "hidden";
     setOpen(true);
   }, []);
@@ -130,8 +132,9 @@ export function Nav() {
       <dialog
         ref={drawer}
         aria-label="Menu"
+        tabIndex={-1}
         onClick={(e) => e.target === e.currentTarget && close()}
-        className="drawer m-0 h-dvh max-h-none w-screen max-w-none bg-bg p-0 text-fg"
+        className="drawer m-0 h-dvh outline-none max-h-none w-screen max-w-none bg-bg p-0 text-fg"
       >
         <div aria-hidden className="drawer-blade" />
         <div className="relative flex h-full flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
