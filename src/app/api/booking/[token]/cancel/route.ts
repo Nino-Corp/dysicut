@@ -10,12 +10,15 @@ export const dynamic = "force-dynamic";
 export async function POST(_req: Request, ctx: { params: Promise<{ token: string }> }) {
   const { token } = await ctx.params;
   try {
-    const { booking, cfg } = await cancelByToken(token);
-    after(async () => {
-      const notify = process.env.NOTIFY_EMAIL;
-      if (notify) await sendMail(barberNotice("cancelled", booking, notify));
-      if (booking.email) await sendMail(clientCancelled(booking, "client"));
-    });
+    const { booking, cfg, refunded } = await cancelByToken(token);
+    // Abandon d'un rdv dont l'acompte n'a pas été payé (status "expired") : rien à notifier.
+    if (booking.status === "cancelled_client") {
+      after(async () => {
+        const notify = process.env.NOTIFY_EMAIL;
+        if (notify) await sendMail(barberNotice("cancelled", booking, notify));
+        if (booking.email) await sendMail(clientCancelled(booking, "client", refunded));
+      });
+    }
     return Response.json({ booking: toView(booking, cfg.cancelMinHours) }, { headers: NO_STORE });
   } catch (e) {
     return handleError(e);

@@ -28,7 +28,11 @@ const dayChip = (date: string) => {
   return { weekday: f({ weekday: "short" }), day: f({ day: "numeric" }), month: f({ month: "short" }), long: f({ weekday: "long", day: "numeric", month: "long" }) };
 };
 
-export function BookingFlow({ services }: { services: PublicService[] }) {
+/**
+ * depositEur > 0 : acompte demandé à tout le monde (mode "tous"). En mode "clients déjà absents", c'est le serveur qui décide
+ * et renvoie `checkoutUrl` ; le montant n'est alors pas annoncé à l'avance.
+ */
+export function BookingFlow({ services, depositEur = 0, noShowThreshold = 0 }: { services: PublicService[]; depositEur?: number; noShowThreshold?: number }) {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [service, setService] = useState<PublicService | null>(null);
   const [avail, setAvail] = useState<Avail>({ status: "loading" });
@@ -39,6 +43,7 @@ export function BookingFlow({ services }: { services: PublicService[] }) {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<Done | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
   const [hasStored, setHasStored] = useState<string | null>(null);
 
   useEffect(() => setHasStored(readStored()?.token ?? null), []);
@@ -104,7 +109,13 @@ export function BookingFlow({ services }: { services: PublicService[] }) {
           website: form.website,
         }),
       });
-      const j = (await r.json()) as { token?: string; booking?: BookingView; error?: string; message?: string };
+      const j = (await r.json()) as { token?: string; booking?: BookingView; checkoutUrl?: string | null; error?: string; message?: string };
+      // Acompte exigé : direction la page de paiement Stripe. Le rdv est confirmé quand le paiement arrive (webhook).
+      if (r.ok && j.token && j.checkoutUrl) {
+        setRedirecting(true);
+        window.location.assign(j.checkoutUrl);
+        return;
+      }
       if (r.ok && j.token && j.booking) {
         writeStored({ token: j.token, startsAt: j.booking.startsAt, serviceName: j.booking.serviceName });
         setDone({ token: j.token, booking: j.booking });
@@ -121,6 +132,7 @@ export function BookingFlow({ services }: { services: PublicService[] }) {
     } catch {
       setError("Connexion impossible. Vérifie ton réseau et réessaie.");
     } finally {
+      // Pendant la redirection vers Stripe, le bouton reste bloqué (évite un double envoi).
       setSubmitting(false);
     }
   };
@@ -350,8 +362,24 @@ export function BookingFlow({ services }: { services: PublicService[] }) {
               {fieldErrors.consent ? <p className="mt-2 text-[15px]">{fieldErrors.consent}</p> : null}
             </div>
 
-            <HoverButton type="submit" size="lg" disabled={submitting} className="w-full">
-              {submitting ? "Réservation..." : `Confirmer, ${service.priceEur} € sur place`}
+            {depositEur > 0 ? (
+              <p className="text-[15px] text-fg-muted">
+                Un acompte de {Math.min(depositEur, service.priceEur)} € est demandé pour bloquer ton créneau. Il est déduit du prix sur place et remboursé si tu annules dans les délais.
+              </p>
+            ) : null}
+            <p className="text-[15px] text-fg-muted">
+              Un empêchement ? Annule en un tap depuis ton lien, ça libère la place pour quelqu&apos;un d&apos;autre.
+              {noShowThreshold > 0 ? ` Après ${noShowThreshold} absence${noShowThreshold > 1 ? "s" : ""} sans prévenir, la réservation en ligne est bloquée.` : ""}
+            </p>
+
+            <HoverButton type="submit" size="lg" disabled={submitting || redirecting} className="w-full">
+              {redirecting
+                ? "Redirection vers le paiement..."
+                : submitting
+                  ? "Réservation..."
+                  : depositEur > 0
+                    ? `Payer l'acompte de ${Math.min(depositEur, service.priceEur)} €`
+                    : `Confirmer, ${service.priceEur} € sur place`}
             </HoverButton>
           </form>
         </section>

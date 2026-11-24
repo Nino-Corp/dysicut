@@ -61,6 +61,9 @@ export async function GET(req: Request) {
     }
   }
 
+  // Réservations provisoires dont l'acompte n'est jamais venu : on les clôt (elles ne bloquaient déjà plus le créneau).
+  await db().from("bookings").update({ status: "expired", payment_status: "none" }).eq("status", "pending_payment").lt("hold_expires_at", new Date().toISOString());
+
   const cutoff = new Date();
   cutoff.setMonth(cutoff.getMonth() - 12);
   const purged = await db().from("bookings").delete({ count: "exact" }).lt("ends_at", cutoff.toISOString());

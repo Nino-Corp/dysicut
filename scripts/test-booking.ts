@@ -4,6 +4,7 @@ import { parisToUtc, parisParts, addDays, timeLabel } from "../src/lib/booking/t
 import { slotsForDay, availability } from "../src/lib/booking/slots.ts";
 import { normalizePhone, formatPhone } from "../src/lib/booking/phone.ts";
 import { buildIcs } from "../src/lib/booking/ics.ts";
+import { activeNoShows, depositCentsFor, isBlocked } from "../src/lib/booking/standing.ts";
 
 // --- fuseau : hiver (UTC+1) et été (UTC+2), changements d'heure
 assert.equal(parisToUtc("2026-11-16", "11:00").toISOString(), "2026-11-16T10:00:00.000Z");
@@ -64,3 +65,26 @@ assert.match(ics, /SUMMARY:Coupe\\, Dysicut/);
 for (const line of ics.split("\r\n")) assert.ok(new TextEncoder().encode(line).length <= 75, "ligne trop longue");
 
 console.log("booking: ok");
+
+// --- absences, blocage, acompte
+const d = (iso: string) => new Date(iso);
+const none = { blocked: false, liftedAt: null, noShowDates: [] };
+assert.equal(isBlocked(none, 2), false);
+assert.equal(isBlocked({ ...none, noShowDates: [d("2026-10-01")] }, 2), false); // 1 absence : pas encore
+assert.equal(isBlocked({ ...none, noShowDates: [d("2026-10-01"), d("2026-10-20")] }, 2), true); // seuil atteint
+assert.equal(isBlocked({ ...none, noShowDates: [d("2026-10-01"), d("2026-10-20")] }, 0), false); // seuil 0 = jamais
+assert.equal(isBlocked({ ...none, blocked: true }, 0), true); // blocage manuel toujours actif
+// pardon : seules les absences posterieures comptent
+const pardoned = { blocked: false, liftedAt: d("2026-11-01"), noShowDates: [d("2026-10-01"), d("2026-10-20"), d("2026-11-10")] };
+assert.equal(activeNoShows(pardoned), 1);
+assert.equal(isBlocked(pardoned, 2), false);
+assert.equal(isBlocked({ ...pardoned, noShowDates: [...pardoned.noShowDates, d("2026-11-15")] }, 2), true);
+
+const base = { mode: "all" as const, depositCents: 500, priceCents: 2000, activeNoShows: 0, stripeReady: true };
+assert.equal(depositCentsFor(base), 500);
+assert.equal(depositCentsFor({ ...base, mode: "off" }), 0);
+assert.equal(depositCentsFor({ ...base, stripeReady: false }), 0); // sans Stripe : jamais d'acompte
+assert.equal(depositCentsFor({ ...base, mode: "flagged" }), 0); // client sans absence
+assert.equal(depositCentsFor({ ...base, mode: "flagged", activeNoShows: 1 }), 500);
+assert.equal(depositCentsFor({ ...base, priceCents: 300 }), 300); // jamais plus que le prix
+assert.equal(depositCentsFor({ ...base, priceCents: 30 }), 0); // sous le minimum Stripe (0,50 EUR)

@@ -51,7 +51,13 @@ export default function Confidentialite() {
             <li><strong className="font-semibold text-fg">Une empreinte anonymisée de ton adresse IP</strong> : ton IP n&apos;est jamais enregistrée telle quelle, seulement transformée en code irréversible, pour limiter les réservations abusives (par exemple un robot qui bloquerait tous les créneaux).</li>
           </ul>
           <p>
-            Rien d&apos;autre : pas de date de naissance, pas de compte client, pas de paiement en ligne, pas de profilage.
+            <strong className="font-semibold text-fg">Absences.</strong> Si tu réserves puis ne viens pas sans prévenir, ton rendez-vous est noté « absent » et rattaché à ton numéro. Après plusieurs absences, la réservation en ligne peut être bloquée pour ce numéro, ou un acompte peut t&apos;être demandé. Le studio peut lever ce blocage à tout moment.
+          </p>
+          <p>
+            <strong className="font-semibold text-fg">Acompte.</strong> Quand un acompte est demandé, tu le règles sur la page sécurisée de Stripe : {site.name} ne voit ni ne conserve ton numéro de carte, seulement le fait que le paiement a été reçu, remboursé ou conservé après une absence.
+          </p>
+          <p>
+            Rien d&apos;autre : pas de date de naissance, pas de compte client, pas de profilage.
           </p>
         </Block>
 
@@ -70,6 +76,7 @@ export default function Confidentialite() {
           <ul className={ul}>
             <li><strong className="font-semibold text-fg">Supabase</strong> : base de données où sont stockés les rendez-vous.</li>
             <li><strong className="font-semibold text-fg">Vercel</strong> : hébergement du site et exécution des tâches automatiques (rappels, nettoyage).</li>
+            <li><strong className="font-semibold text-fg">Stripe</strong> : encaissement et remboursement de l&apos;acompte, uniquement lorsqu&apos;un acompte est demandé.</li>
             <li><strong className="font-semibold text-fg">Resend</strong> : envoi des emails de confirmation, de rappel et d&apos;annulation, uniquement si tu as renseigné ton email, et des notifications adressées à {site.name}.</li>
           </ul>
           <p>

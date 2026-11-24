@@ -6,6 +6,7 @@ export type BookingErrorCode =
   | "RATE_LIMITED"
   | "SERVICE_UNAVAILABLE"
   | "BOOKING_DISABLED"
+  | "PHONE_BLOCKED"
   | "NOT_FOUND"
   | "NOT_CANCELLABLE"
   | "CANCEL_TOO_LATE"
@@ -30,6 +31,10 @@ export const errorMessages: Record<BookingErrorCode, { status: number; message: 
   RATE_LIMITED: { status: 429, message: "Trop de tentatives. Réessaie dans une heure ou écris-nous en message." },
   SERVICE_UNAVAILABLE: { status: 409, message: "Cette prestation n'est plus disponible." },
   BOOKING_DISABLED: { status: 503, message: "La réservation en ligne est fermée pour le moment. Écris-nous en message." },
+  PHONE_BLOCKED: {
+    status: 403,
+    message: "La réservation en ligne n'est pas disponible avec ce numéro. Contacte directement le barber.",
+  },
   NOT_FOUND: { status: 404, message: "Rendez-vous introuvable." },
   NOT_CANCELLABLE: { status: 409, message: "Ce rendez-vous n'est plus annulable." },
   CANCEL_TOO_LATE: { status: 409, message: "Il est trop tard pour annuler en ligne. Contacte directement le barber." },

@@ -8,15 +8,33 @@ import { dayLabel, timeLabel } from "@/lib/booking/time";
 import type { BookingView } from "@/lib/booking/repo";
 import { clearStored, writeStored } from "./storage";
 
-type Props = { token: string; booking: BookingView };
+type Props = { token: string; booking: BookingView; justPaid?: boolean };
 
 /** Lien d'annulation, calendrier et annulation : les trois sorties d'un rdv, sans compte. */
-export function ManageActions({ token, booking }: Props) {
+export function ManageActions({ token, booking, justPaid = false }: Props) {
   const [view, setView] = useState(booking);
   const [copied, setCopied] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Retour de Stripe : le webhook peut arriver quelques secondes après le client. On vérifie jusqu'à 90 s.
+  useEffect(() => {
+    if (view.status !== "pending_payment" || !justPaid) return;
+    let tries = 0;
+    const timer = setInterval(async () => {
+      tries++;
+      try {
+        const r = await fetch(`/api/booking/${token}`, { cache: "no-store" });
+        const j = (await r.json()) as { booking?: BookingView };
+        if (j.booking && j.booking.status !== "pending_payment") setView(j.booking);
+      } catch {
+        /* réessaie au prochain tour */
+      }
+      if (tries >= 30) clearInterval(timer);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [token, justPaid, view.status]);
 
   // Mémorise (ou oublie) le rdv dans ce navigateur : bandeau « Mon rendez-vous » sur le site.
   useEffect(() => {
@@ -55,10 +73,53 @@ export function ManageActions({ token, booking }: Props) {
     }
   };
 
+  if (view.status === "pending_payment") {
+    return (
+      <div className="space-y-4">
+        <p className="text-[17px]" role="status">
+          {justPaid
+            ? "Paiement reçu, validation en cours. Cette page se met à jour toute seule."
+            : `Ton créneau est réservé pour quelques minutes. Règle l'acompte de ${view.depositEur} € pour le confirmer.`}
+        </p>
+        {view.checkoutUrl ? (
+          <HoverButton href={view.checkoutUrl} size="lg" className="w-full">
+            {justPaid ? "Revenir au paiement" : `Payer l'acompte de ${view.depositEur} €`}
+          </HoverButton>
+        ) : null}
+        {confirming ? (
+          <div className="grid grid-cols-2 gap-3">
+            <HoverButton variant="ghost" disabled={busy} onClick={() => setConfirming(false)}>
+              Garder
+            </HoverButton>
+            <HoverButton disabled={busy} onClick={cancel}>
+              {busy ? "..." : "Oui, abandonner"}
+            </HoverButton>
+          </div>
+        ) : (
+          <HoverButton variant="ghost" onClick={() => setConfirming(true)} className="w-full">
+            Abandonner la réservation
+          </HoverButton>
+        )}
+        {error ? (
+          <p role="alert" className="text-[15px] text-fg">
+            {error}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
   if (view.status !== "confirmed") {
     return (
       <div className="space-y-4">
-        <p className="text-[17px]">{view.status === "no_show" ? "Ce rendez-vous est clos." : "Ce rendez-vous est annulé. Le créneau est libre."}</p>
+        <p className="text-[17px]">
+          {view.status === "no_show"
+            ? "Ce rendez-vous est clos."
+            : view.status === "expired"
+              ? "Ce rendez-vous n'a pas été confirmé (acompte non réglé). Le créneau est libre."
+              : "Ce rendez-vous est annulé. Le créneau est libre."}
+        </p>
+        {view.paymentStatus === "refunded" ? <p className="text-[15px] text-fg-muted">Ton acompte de {view.depositEur} € est remboursé (quelques jours selon ta banque).</p> : null}
         <HoverButton href="/reserver" variant="ghost" className="w-full">
           Reprendre RDV
         </HoverButton>
@@ -92,6 +153,11 @@ export function ManageActions({ token, booking }: Props) {
       <HoverButton href={`/api/booking/${token}/ics`} variant="ghost" icon={ArrowDownTrayIcon} className="w-full">
         Ajouter à mon calendrier
       </HoverButton>
+
+      <p className="text-[15px] text-fg-muted">
+        Un empêchement ? Annule en un tap, ça libère la place pour quelqu&apos;un d&apos;autre.
+        {view.paymentStatus === "paid" ? ` Annulé à temps, ton acompte de ${view.depositEur} € est remboursé.` : ""}
+      </p>
 
       {view.cancellable ? (
         confirming ? (

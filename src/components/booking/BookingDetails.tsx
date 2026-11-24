@@ -2,10 +2,10 @@ import { dayLabel, timeLabel } from "@/lib/booking/time";
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-type Props = { startsAt: string; endsAt?: string; serviceName: string; priceEur: number; className?: string };
+type Props = { startsAt: string; endsAt?: string; serviceName: string; priceEur: number; depositPaidEur?: number; className?: string };
 
 /** Récap d'un rdv : date en grand, prestation et prix. */
-export function BookingDetails({ startsAt, endsAt, serviceName, priceEur, className = "" }: Props) {
+export function BookingDetails({ startsAt, endsAt, serviceName, priceEur, depositPaidEur = 0, className = "" }: Props) {
   const start = new Date(startsAt);
   const minutes = endsAt ? Math.round((new Date(endsAt).getTime() - start.getTime()) / 60000) : null;
   return (
@@ -19,6 +19,18 @@ export function BookingDetails({ startsAt, endsAt, serviceName, priceEur, classN
         </span>
         <span className="text-[17px] font-semibold tabular-nums">{priceEur} €</span>
       </div>
+      {depositPaidEur > 0 ? (
+        <div className="mt-3 flex items-baseline justify-between gap-4 text-[15px] text-fg-muted">
+          <span>Acompte réglé</span>
+          <span className="tabular-nums">- {depositPaidEur} €</span>
+        </div>
+      ) : null}
+      {depositPaidEur > 0 ? (
+        <div className="mt-1 flex items-baseline justify-between gap-4 text-[17px] font-semibold">
+          <span>Reste à payer sur place</span>
+          <span className="tabular-nums">{Math.max(priceEur - depositPaidEur, 0)} €</span>
+        </div>
+      ) : null}
     </div>
   );
 }

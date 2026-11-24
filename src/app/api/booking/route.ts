@@ -25,7 +25,7 @@ export async function POST(req: Request) {
 
   try {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? req.headers.get("x-real-ip");
-    const { booking, token, cfg } = await createBooking({
+    const { booking, token, cfg, checkoutUrl } = await createBooking({
       serviceId: input.serviceId,
       start: new Date(input.start),
       firstName: input.firstName,
@@ -34,14 +34,20 @@ export async function POST(req: Request) {
       ipHash: hashIp(ip),
     });
 
-    // Emails après la réponse : le client n'attend pas Resend.
-    after(async () => {
-      const notify = process.env.NOTIFY_EMAIL;
-      if (notify) await sendMail(barberNotice("new", booking, notify));
-      if (booking.email) await sendMail(clientConfirmation(booking, token));
-    });
+    // Acompte exigé : rien n'est envoyé tant que le paiement n'est pas arrivé (le webhook Stripe confirme le rdv et envoie les emails).
+    if (booking.status === "confirmed") {
+      // Emails après la réponse : le client n'attend pas Resend.
+      after(async () => {
+        const notify = process.env.NOTIFY_EMAIL;
+        if (notify) await sendMail(barberNotice("new", booking, notify));
+        if (booking.email) await sendMail(clientConfirmation(booking, token));
+      });
+    }
 
-    return Response.json({ token, manageUrl: manageUrl(token), booking: toView(booking, cfg.cancelMinHours) }, { status: 201, headers: NO_STORE });
+    return Response.json(
+      { token, manageUrl: manageUrl(token), checkoutUrl, booking: toView(booking, cfg.cancelMinHours) },
+      { status: 201, headers: NO_STORE },
+    );
   } catch (e) {
     return handleError(e);
   }

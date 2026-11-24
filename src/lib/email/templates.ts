@@ -171,6 +171,14 @@ const hero = (b: BookingRow, extra: { hint?: string; struck?: boolean } = {}) =>
   return { time: timeLabel(s), day: cap(dayLabel(s)), ...extra };
 };
 
+/** Ligne "Acompte" (rien si aucun acompte). `barber` : formulation côté studio. */
+const depositRow = (b: BookingRow, barber = false): [string, string][] => {
+  if (b.deposit_cents <= 0) return [];
+  const rest = euros(b.price_cents - b.deposit_cents);
+  if (barber) return [["Acompte", `${euros(b.deposit_cents)} payé en ligne, reste ${rest} sur place`]];
+  return [["Acompte", `${euros(b.deposit_cents)} payé, reste ${rest} sur place`]];
+};
+
 export function calendarFile(b: BookingRow, token: string) {
   return buildIcs(
     [
@@ -201,12 +209,13 @@ export function clientConfirmation(b: BookingRow, token: string): Mail {
       ["Prestation", esc(b.service_name)],
       ["Durée", `${minutes(b)} min`],
     ],
-    rows: [["Adresse", addressLine().html]],
+    rows: [["Adresse", addressLine().html], ...depositRow(b)],
     primary: { label: "Ajouter au calendrier", href: icsUrl(token) },
     secondary: [{ label: "Gérer ou annuler", href: manageUrl(token) }],
     after: [
       "Garde ce mail : le bouton Gérer ou annuler est le seul moyen d'annuler en ligne. Le fichier .ics joint ajoute aussi le rdv à ton calendrier.",
       "En cas d'empêchement, annule dès que possible pour libérer le créneau.",
+      ...(b.deposit_cents > 0 ? ["L'acompte t'est rendu si tu annules dans les délais. En cas d'absence sans prévenir, il est conservé."] : []),
     ],
   });
   return { to: b.email!, subject: `Rdv confirmé : ${when(b)}`, html, text, attachments: [{ filename: "rdv-dysicut.ics", content: calendarFile(b, token), contentType: "text/calendar" }] };
@@ -226,13 +235,13 @@ export function clientReminder(b: BookingRow, token: string | null): Mail {
     ],
     rows: [["Adresse", addressLine().html]],
     ...(token ? { primary: { label: "Annuler mon rdv", href: manageUrl(token) } } : {}),
-    after: ["Si tu ne peux pas venir, annule pour libérer le créneau."],
+    after: ["Si tu ne peux pas venir, annule pour libérer le créneau. Les absences répétées sans prévenir bloquent la réservation en ligne."],
   });
   return { to: b.email!, subject: `Rappel : rdv demain, ${timeLabel(new Date(b.starts_at))}`, html, text };
 }
 
 /** Client : annulation (par le barber, ou confirmation d'une annulation faite par le client). */
-export function clientCancelled(b: BookingRow, by: "barber" | "client"): Mail {
+export function clientCancelled(b: BookingRow, by: "barber" | "client", refunded = false): Mail {
   const { html, text } = layout({
     preheader: `Rdv du ${when(b)} annulé.`,
     tag: "Annulé",
@@ -241,6 +250,7 @@ export function clientCancelled(b: BookingRow, by: "barber" | "client"): Mail {
     intro: by === "barber" ? `Salut ${esc(b.first_name)}, ce rdv est annulé. Désolé pour le dérangement.` : `Salut ${esc(b.first_name)}, ton rdv est bien annulé.`,
     facts: [["Prestation", esc(b.service_name)]],
     primary: { label: "Reprendre RDV", href: `${site.url}/reserver` },
+    ...(refunded ? { after: [`Ton acompte de ${euros(b.deposit_cents)} est remboursé. Il apparaît sur ton relevé sous quelques jours.`] } : {}),
   });
   return { to: b.email!, subject: `Rdv annulé : ${when(b)}`, html, text };
 }
@@ -263,6 +273,7 @@ export function barberNotice(kind: "new" | "cancelled", b: BookingRow, to: strin
     ],
     rows: [
       ["Téléphone", `<a href="tel:${esc(phone)}" style="color:${C.fg};text-decoration:underline">${esc(b.phone)}</a>`],
+      ...depositRow(b, true),
       ["Email", b.email ? `<a href="mailto:${esc(b.email)}" style="color:${C.fg};text-decoration:underline">${esc(b.email)}</a>` : `<span style="color:${C.muted}">non renseigné</span>`],
     ],
     ...(isNew

@@ -4,6 +4,8 @@ import { timeLabel } from "@/lib/booking/time";
 import type { BookingRow } from "@/lib/booking/repo";
 
 const statusLabel: Record<BookingRow["status"], string | null> = {
+  pending_payment: "Acompte à payer",
+  expired: "Expiré",
   confirmed: null,
   cancelled_client: "Annulé par le client",
   cancelled_barber: "Annulé",
@@ -13,7 +15,7 @@ const statusLabel: Record<BookingRow["status"], string | null> = {
 /** Ligne d'agenda : heure en grand, nom, prestation. Toute la ligne est cliquable (cible >= 44 px). */
 export function BookingItem({ b }: { b: BookingRow }) {
   const status = statusLabel[b.status];
-  const inactive = b.status !== "confirmed";
+  const inactive = b.status !== "confirmed" && b.status !== "pending_payment";
   return (
     <Link
       href={`/admin/rdv/${b.id}`}
@@ -29,6 +31,7 @@ export function BookingItem({ b }: { b: BookingRow }) {
           {b.service_name} · {formatPhone(b.phone)}
         </div>
       </div>
+      {b.payment_status === "paid" && b.status === "confirmed" ? <span className="shrink-0 rounded-full border border-line-strong px-2.5 py-1 text-xs text-fg-muted">Acompte payé</span> : null}
       {status ? <span className="shrink-0 rounded-full border border-line-strong px-2.5 py-1 text-xs text-fg-muted">{status}</span> : null}
       {b.source === "admin" && !status ? <span className="shrink-0 rounded-full border border-line-strong px-2.5 py-1 text-xs text-fg-muted">Manuel</span> : null}
     </Link>

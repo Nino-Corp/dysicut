@@ -7,11 +7,13 @@ import { db } from "@/lib/db/supabase";
 import { newCancelToken } from "@/lib/booking/token";
 import { normalizePhone } from "@/lib/booking/phone";
 import { addDays, parisToUtc, timeLabel } from "@/lib/booking/time";
-import type { BookingRow } from "@/lib/booking/repo";
+import { refundIfPaid, type BookingRow } from "@/lib/booking/repo";
+import { activeNoShows, isBlocked } from "@/lib/booking/standing";
+import { expireCheckout, stripeConfigured } from "@/lib/stripe/stripe";
 import { calendarFile, clientCancelled, clientConfirmation } from "@/lib/email/templates";
 import { sendMail } from "@/lib/email/send";
 import { endSession, loginThrottled, requireAdmin, startSession, verifyCredentials } from "./session";
-import { newIcalToken } from "./data";
+import { adminSettings, newIcalToken, standingFor } from "./data";
 import type { ActionState } from "./types";
 
 const fail = (error: string): ActionState => ({ error });
@@ -49,20 +51,32 @@ export async function logout(): Promise<void> {
 export async function cancelBooking(_: ActionState, f: FormData): Promise<ActionState> {
   await requireAdmin();
   const id = str(f, "id");
-  // Condition sur le statut : un double clic ne notifie qu'une fois.
+  // Condition sur le statut : un double clic ne notifie qu'une fois. Un rdv dont l'acompte attend d'être payé s'annule aussi.
   const { data, error } = await db()
     .from("bookings")
     .update({ status: "cancelled_barber", cancelled_at: new Date().toISOString() })
     .eq("id", id)
-    .eq("status", "confirmed")
+    .in("status", ["confirmed", "pending_payment"])
     .select("*")
     .maybeSingle();
   if (error) return fail("Annulation impossible.");
   if (!data) return fail("Ce rdv n'est plus actif.");
-  const b = data as BookingRow;
+  let b = data as BookingRow;
+  if (b.stripe_session_id && b.payment_status === "pending") await expireCheckout(b.stripe_session_id);
+
+  // Annulation par le barber : l'acompte est toujours rendu.
+  const hadDeposit = b.payment_status === "paid";
+  let refunded = false;
+  if (hadDeposit) {
+    const r = await refundIfPaid(b);
+    b = r.booking;
+    refunded = r.ok;
+  }
   revalidatePath("/admin", "layout");
-  if (b.email) await sendMail(clientCancelled(b, "barber"));
-  return done(b.email ? "Rdv annulé. Le client a reçu un email." : "Rdv annulé. Prévins le client toi-même (boutons ci-dessus).");
+  if (b.email) await sendMail(clientCancelled(b, "barber", refunded));
+  const mail = b.email ? "Le client a reçu un email." : "Prévins le client toi-même (boutons ci-dessus).";
+  if (hadDeposit && !refunded) return done(`Rdv annulé, mais le remboursement de l'acompte a échoué : rembourse-le depuis le dashboard Stripe. ${mail}`);
+  return done(`Rdv annulé${refunded ? ", acompte remboursé" : ""}. ${mail}`);
 }
 
 export async function markNoShow(_: ActionState, f: FormData): Promise<ActionState> {
@@ -73,12 +87,34 @@ export async function markNoShow(_: ActionState, f: FormData): Promise<ActionSta
     .eq("id", str(f, "id"))
     .eq("status", "confirmed")
     .lte("starts_at", new Date().toISOString())
-    .select("id")
+    .select("*")
     .maybeSingle();
   if (error) return fail("Action impossible.");
   if (!data) return fail("Seul un rdv déjà commencé peut être marqué absent.");
+  const b = data as BookingRow;
+  // L'acompte est conservé (le barber peut le rendre depuis la fiche du rdv).
+  if (b.payment_status === "paid") await db().from("bookings").update({ payment_status: "forfeited" }).eq("id", b.id);
   revalidatePath("/admin", "layout");
-  return done("Marqué absent.");
+
+  const [settings, standing] = await Promise.all([adminSettings(), standingFor(b.phone)]);
+  const n = activeNoShows(standing);
+  const parts = ["Marqué absent."];
+  if (b.payment_status === "paid") parts.push("Acompte conservé.");
+  if (isBlocked(standing, settings.no_show_block_threshold)) parts.push(`${n} absence${n > 1 ? "s" : ""} : ce numéro ne peut plus réserver en ligne.`);
+  else if (settings.deposit_mode === "flagged") parts.push("Ses prochaines réservations demanderont un acompte.");
+  return done(parts.join(" "));
+}
+
+/** Rend l'acompte conservé après une absence (geste commercial, ou erreur de saisie du barber). */
+export async function refundDepositAction(_: ActionState, f: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const { data } = await db().from("bookings").select("*").eq("id", str(f, "id")).maybeSingle();
+  const b = data as BookingRow | null;
+  if (!b || (b.payment_status !== "paid" && b.payment_status !== "forfeited")) return fail("Aucun acompte à rendre sur ce rdv.");
+  const r = await refundIfPaid({ ...b, payment_status: "paid" });
+  if (!r.ok) return fail("Remboursement impossible. Fais-le depuis le dashboard Stripe.");
+  revalidatePath("/admin", "layout");
+  return done("Acompte remboursé.");
 }
 
 export async function updateDuration(_: ActionState, f: FormData): Promise<ActionState> {
@@ -296,4 +332,51 @@ export async function regenerateIcal(): Promise<ActionState> {
   if (r.error) return fail("Régénération impossible.");
   revalidatePath("/admin/reglages");
   return done("Nouveau lien généré. Réabonne ton calendrier avec le nouveau lien.");
+}
+
+// ---------------------------------------------------------------- absences, blocage, acompte
+
+const policySchema = z.object({
+  threshold: z.coerce.number().int().min(0).max(20),
+  mode: z.enum(["off", "flagged", "all"]),
+  depositEur: z.coerce.number().min(0.5, "Acompte : 0,50 € minimum").max(200, "Acompte : 200 € maximum"),
+});
+
+export async function savePolicy(_: ActionState, f: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const p = policySchema.safeParse(Object.fromEntries(f));
+  if (!p.success) return fail(p.error.issues[0]?.message ?? "Valeurs invalides.");
+  if (p.data.mode !== "off" && !stripeConfigured()) return fail("Stripe n'est pas encore branché sur le site (clés manquantes). Garde « Aucun acompte » pour l'instant.");
+  const r = await db()
+    .from("booking_settings")
+    .update({ no_show_block_threshold: p.data.threshold, deposit_mode: p.data.mode, deposit_cents: Math.round(p.data.depositEur * 100) })
+    .eq("id", 1);
+  if (r.error) return fail("Enregistrement impossible (migration 0003 appliquée ?).");
+  revalidatePath("/", "layout");
+  return done("Enregistré.");
+}
+
+const phoneOf = (f: FormData) => normalizePhone(str(f, "phone"));
+
+/** Bloque un numéro à la main : plus aucune réservation en ligne, jusqu'au déblocage. */
+export async function blockPhone(_: ActionState, f: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const phone = phoneOf(f);
+  if (!phone) return fail("Numéro invalide.");
+  const r = await db().from("phone_blocks").upsert({ phone, blocked: true, note: str(f, "note") || null, updated_at: new Date().toISOString() });
+  if (r.error) return fail("Blocage impossible.");
+  revalidatePath("/admin", "layout");
+  return done("Numéro bloqué pour la réservation en ligne.");
+}
+
+/** Pardon : lève le blocage manuel ET remet le compteur d'absences à zéro (les anciennes absences restent dans l'historique). */
+export async function unblockPhone(_: ActionState, f: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const phone = phoneOf(f);
+  if (!phone) return fail("Numéro invalide.");
+  const now = new Date().toISOString();
+  const r = await db().from("phone_blocks").upsert({ phone, blocked: false, lifted_at: now, updated_at: now });
+  if (r.error) return fail("Déblocage impossible.");
+  revalidatePath("/admin", "layout");
+  return done("Numéro débloqué, compteur d'absences remis à zéro.");
 }

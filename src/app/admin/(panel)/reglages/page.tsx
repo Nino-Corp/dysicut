@@ -1,9 +1,10 @@
 import { ActionForm, SubmitButton } from "@/components/admin/ActionForm";
 import { card, h2, input, label } from "@/components/admin/ui";
-import { addService, regenerateIcal, saveHours, saveService, saveSettings } from "@/lib/admin/actions";
+import { addService, regenerateIcal, saveHours, savePolicy, saveService, saveSettings } from "@/lib/admin/actions";
 import { adminSettings, allServices, openingHoursRows } from "@/lib/admin/data";
 import { requireAdmin } from "@/lib/admin/session";
 import { site } from "@/config/site";
+import { stripeConfigured } from "@/lib/stripe/stripe";
 import { HoverButton } from "@/components/ui/HoverButton";
 import { CopyField } from "./CopyField";
 
@@ -36,6 +37,28 @@ export default async function Settings() {
             <Num id="advance" name="advance" text="Horizon max (jours)" value={s.max_advance_days} min={1} />
             <Num id="cancelHours" name="cancelHours" text="Annulation client jusqu'à (h avant)" value={s.cancel_min_hours} min={0} />
           </div>
+          <SubmitButton>Enregistrer</SubmitButton>
+        </ActionForm>
+      </section>
+
+      <section id="politique" aria-labelledby="absences" className="scroll-mt-6 space-y-4">
+        <h2 id="absences" className={h2}>Absences et acompte</h2>
+        <p className="text-[15px] text-fg-muted">
+          Contre les lapins : bloque automatiquement les numéros qui ne viennent pas, et demande un acompte si tu veux aller plus loin.
+          L&apos;acompte est rendu si le client annule dans les délais (ou si tu annules), et conservé en cas d&apos;absence.
+        </p>
+        <ActionForm action={savePolicy} className={`${card} space-y-4`}>
+          <Num id="threshold" name="threshold" text="Blocage après X absences (0 = jamais)" value={s.no_show_block_threshold} min={0} />
+          <fieldset className="space-y-1">
+            <legend className={label}>Acompte à la réservation</legend>
+            <Radio name="mode" value="off" current={s.deposit_mode} text="Aucun acompte" />
+            <Radio name="mode" value="flagged" current={s.deposit_mode} text="Seulement les clients déjà absents" />
+            <Radio name="mode" value="all" current={s.deposit_mode} text="Tous les clients" />
+          </fieldset>
+          <Num id="depositEur" name="depositEur" text="Montant de l'acompte (€, jamais plus que le prix)" value={s.deposit_cents / 100} min={0.5} step={0.5} />
+          {stripeConfigured() ? null : (
+            <p className="text-sm text-fg-muted">Stripe n&apos;est pas encore branché sur le site (clés absentes) : l&apos;acompte reste désactivé tant que ce n&apos;est pas fait.</p>
+          )}
           <SubmitButton>Enregistrer</SubmitButton>
         </ActionForm>
       </section>
@@ -116,6 +139,15 @@ export default async function Settings() {
         </ActionForm>
       </section>
     </div>
+  );
+}
+
+function Radio({ name, value, current, text }: { name: string; value: string; current: string; text: string }) {
+  return (
+    <label className="flex min-h-11 items-center gap-3 text-[16px]">
+      <input type="radio" name={name} value={value} defaultChecked={current === value} className={check} />
+      {text}
+    </label>
   );
 }
 

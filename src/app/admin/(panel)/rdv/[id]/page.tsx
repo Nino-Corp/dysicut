@@ -5,15 +5,25 @@ import { ActionForm, ConfirmSubmit, SubmitButton } from "@/components/admin/Acti
 import { card, input, label } from "@/components/admin/ui";
 import { HoverButton } from "@/components/ui/HoverButton";
 
-import { cancelBooking, markNoShow, updateDuration } from "@/lib/admin/actions";
-import { bookingById } from "@/lib/admin/data";
+import { BlockAction, ClientActions } from "@/components/admin/ClientActions";
+import { cancelBooking, markNoShow, refundDepositAction, updateDuration } from "@/lib/admin/actions";
+import { adminSettings, bookingById, standingFor } from "@/lib/admin/data";
+import { activeNoShows, isBlocked } from "@/lib/booking/standing";
 import { requireAdmin } from "@/lib/admin/session";
 import { formatPhone } from "@/lib/booking/phone";
 import { dayLabel, parisDateKey, timeLabel } from "@/lib/booking/time";
 
 export const metadata = { title: "Rendez-vous" };
 
-const STATUS = { confirmed: "Confirmé", cancelled_client: "Annulé par le client", cancelled_barber: "Annulé", no_show: "Absent" } as const;
+const STATUS = {
+  pending_payment: "Acompte à payer",
+  confirmed: "Confirmé",
+  cancelled_client: "Annulé par le client",
+  cancelled_barber: "Annulé",
+  no_show: "Absent",
+  expired: "Expiré (acompte non payé)",
+} as const;
+const PAYMENT = { none: "Aucun", pending: "En attente", paid: "Payé", refunded: "Remboursé", forfeited: "Conservé (absence)" } as const;
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export default async function BookingPage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,6 +36,11 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
   const end = new Date(b.ends_at);
   const minutes = Math.round((+end - +start) / 60000);
   const confirmed = b.status === "confirmed";
+  const open = confirmed || b.status === "pending_payment";
+  const [settings, standing] = await Promise.all([adminSettings(), standingFor(b.phone)]);
+  const noShows = activeNoShows(standing);
+  const blocked = isBlocked(standing, settings.no_show_block_threshold);
+  const canRefund = b.payment_status === "paid" || b.payment_status === "forfeited";
   const started = start <= new Date();
   const phone = b.phone.replace(/\s+/g, "");
   const sms = `sms:${phone}?&body=${encodeURIComponent(`Salut ${b.first_name}, c'est Dysicut. À propos de ton rdv du ${dayLabel(start)} à ${timeLabel(start)} : `)}`;
@@ -51,8 +66,20 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
         <Fact k="Durée" v={`${minutes} min`} />
         <Fact k="Téléphone" v={formatPhone(b.phone)} />
         <Fact k="Origine" v={b.source === "admin" ? "Ajouté à la main" : "Site"} />
+        {b.deposit_cents > 0 ? <Fact k="Acompte" v={`${b.deposit_cents / 100} € - ${PAYMENT[b.payment_status]}`} wide /> : null}
         {b.email ? <Fact k="Email" v={b.email} wide /> : null}
       </dl>
+
+      {noShows > 0 || blocked ? (
+        <section aria-labelledby="client" className={`${card} space-y-3`}>
+          <h2 id="client" className="text-lg font-semibold tracking-tight">Ce client</h2>
+          <p className="text-[16px]">
+            {noShows} absence{noShows > 1 ? "s" : ""} depuis le dernier pardon.{" "}
+            {blocked ? "Il ne peut plus réserver en ligne." : settings.deposit_mode === "flagged" ? "Il doit verser un acompte pour réserver." : null}
+          </p>
+          <ClientActions phone={b.phone} blocked={blocked} noShows={noShows} />
+        </section>
+      ) : null}
 
       <div className="grid grid-cols-2 gap-3">
         <HoverButton href={`tel:${phone}`} variant="ghost" icon={PhoneIcon}>
@@ -63,8 +90,9 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
         </HoverButton>
       </div>
 
-      {confirmed ? (
+      {open ? (
         <>
+          {confirmed ? (
           <section aria-labelledby="duree" className="space-y-3">
             <h2 id="duree" className="text-lg font-semibold tracking-tight">Durée de ce rdv</h2>
             <ActionForm action={updateDuration} className="space-y-3">
@@ -76,10 +104,11 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
               <SubmitButton ghost>Modifier la durée</SubmitButton>
             </ActionForm>
           </section>
+          ) : null}
 
           <section aria-labelledby="actions" className="space-y-3">
             <h2 id="actions" className="text-lg font-semibold tracking-tight">Actions</h2>
-            {started ? (
+            {confirmed && started ? (
               <ActionForm action={markNoShow} className="space-y-3">
                 <input type="hidden" name="id" value={b.id} />
                 <ConfirmSubmit confirmLabel="Confirmer : absent">Marquer absent</ConfirmSubmit>
@@ -90,10 +119,30 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
               <ConfirmSubmit confirmLabel="Confirmer l'annulation">Annuler ce rdv</ConfirmSubmit>
               <p className="text-sm text-fg-muted">
                 {b.email ? "Le client recevra un email d'annulation." : "Pas d'email : utilise Appeler ou Prévenir pour l'informer."}
+                {b.payment_status === "paid" ? " L'acompte lui sera remboursé." : ""}
               </p>
             </ActionForm>
           </section>
         </>
+      ) : null}
+
+      {canRefund ? (
+        <section aria-labelledby="acompte" className="space-y-3">
+          <h2 id="acompte" className="text-lg font-semibold tracking-tight">Acompte</h2>
+          <ActionForm action={refundDepositAction} className="space-y-3">
+            <input type="hidden" name="id" value={b.id} />
+            <ConfirmSubmit confirmLabel={`Rembourser ${b.deposit_cents / 100} €`}>Rembourser l&apos;acompte</ConfirmSubmit>
+            {b.payment_status === "forfeited" ? <p className="text-sm text-fg-muted">Conservé après l&apos;absence. Tu peux le rendre en geste commercial.</p> : null}
+          </ActionForm>
+        </section>
+      ) : null}
+
+      {!blocked ? (
+        <section aria-labelledby="blocage" className="space-y-3">
+          <h2 id="blocage" className="text-lg font-semibold tracking-tight">Blocage</h2>
+          <BlockAction phone={b.phone} />
+          <p className="text-sm text-fg-muted">Empêche ce numéro de réserver en ligne. Tu peux toujours lui ajouter un rdv à la main.</p>
+        </section>
       ) : null}
     </div>
   );

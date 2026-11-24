@@ -21,7 +21,7 @@ export default async function Reserver() {
   return (
     <BookingShell>
       {cfg?.enabled && cfg.services.length > 0 ? (
-        <BookingFlow services={cfg.services} />
+        <BookingFlow services={cfg.services} depositEur={cfg.depositActive && cfg.depositMode === "all" ? cfg.depositEur : 0} noShowThreshold={cfg.noShowThreshold} />
       ) : (
         <section>
           <h1 className="mt-8 text-[clamp(2rem,8vw,3rem)] font-bold tracking-[-0.04em]">Réservation indisponible</h1>
