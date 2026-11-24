@@ -19,7 +19,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
           </button>
         </form>
       </header>
-      <main className="mx-auto max-w-[720px] px-5 pb-32 pt-2">{children}</main>
+      <main className="mx-auto max-w-[720px] px-5 pt-2 pb-[calc(8rem+env(safe-area-inset-bottom))]">{children}</main>
       <AdminTabs />
     </div>
   );

@@ -37,6 +37,13 @@ export function CutIntro() {
     }
 
     const { innerWidth: w, innerHeight: h } = window;
+    // Le logo se pose sur le wordmark du hero (meme centre vertical) : centre sur toute la hauteur, il
+    // paraissait trop bas sur telephone (nav en haut, barre rdv et barre Safari en bas).
+    const cut = document.querySelector<HTMLElement>(".hero-cut")?.getBoundingClientRect();
+    if (cut && cut.height > 0 && cut.bottom > 0 && cut.top < h) {
+      const y = `${cut.top + cut.height / 2}px`;
+      root.current?.querySelectorAll<HTMLElement>(".intro-logo").forEach((el) => (el.style.top = y));
+    }
     const th = (ANGLE * Math.PI) / 180;
     const u = { x: Math.cos(th), y: -Math.sin(th) }; // le long de la coupe (vers le haut droit)
     const n = { x: -Math.sin(th), y: -Math.cos(th) }; // perpendiculaire, cote haut gauche

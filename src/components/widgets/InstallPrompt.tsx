@@ -81,7 +81,7 @@ export function InstallPrompt() {
       role="dialog"
       aria-label="Ajouter Dysicut à l'écran d'accueil"
       className="install-prompt fixed inset-x-4 z-30 rounded-[20px] border border-line-strong bg-surface-2 p-5 nav:hidden"
-      style={{ bottom: "calc(env(safe-area-inset-bottom) + 5.25rem)" }}
+      style={{ bottom: "calc(env(safe-area-inset-bottom) + 6rem)" }}
     >
       <button type="button" onClick={dismiss} aria-label="Fermer" className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-fg-muted">
         <XMarkIcon className="h-5 w-5" />

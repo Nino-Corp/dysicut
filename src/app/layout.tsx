@@ -27,6 +27,8 @@ export const viewport: Viewport = {
   themeColor: "#111111",
   width: "device-width",
   initialScale: 1,
+  // Sans "cover", iOS renvoie 0 pour env(safe-area-inset-*) : les barres fixes du bas collaient a l'indicateur d'accueil.
+  viewportFit: "cover",
 };
 
 // Décide avant le premier paint si l'intro joue : une fois par session, pas en reduced-motion, accueil seulement.

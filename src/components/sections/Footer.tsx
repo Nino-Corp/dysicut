@@ -7,7 +7,7 @@ const link = "flex min-h-11 items-center text-[15px] text-fg-muted transition-co
 
 export function Footer() {
   return (
-    <footer id="contact" className="scroll-mt-4 border-t border-line px-5 pb-32 pt-16 nav:px-14 nav:pb-12">
+    <footer id="contact" className="scroll-mt-4 border-t border-line px-5 pt-16 pb-[calc(8rem+env(safe-area-inset-bottom))] nav:px-14 nav:pb-12">
       <div className="mx-auto grid max-w-[1400px] gap-12 nav:grid-cols-[1.5fr_1fr_1fr]">
         <div>
           <LogoMark className="h-14 w-auto" />
