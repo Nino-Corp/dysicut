@@ -17,6 +17,7 @@ export function ManageActions({ token, booking, justPaid = false }: Props) {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmingAttendance, setConfirmingAttendance] = useState(false);
 
   // Retour de Stripe : le webhook peut arriver quelques secondes après le client. On vérifie jusqu'à 90 s.
   useEffect(() => {
@@ -54,6 +55,21 @@ export function ManageActions({ token, booking, justPaid = false }: Props) {
       setTimeout(() => setCopied(false), 2000);
     } catch {
       setError("Copie impossible. Sélectionne le lien et copie-le à la main.");
+    }
+  };
+
+  const confirmAttendance = async () => {
+    setConfirmingAttendance(true);
+    setError(null);
+    try {
+      const r = await fetch(`/api/booking/${token}/confirm`, { method: "POST" });
+      const j = (await r.json()) as { booking?: BookingView; message?: string };
+      if (!r.ok || !j.booking) throw new Error(j.message ?? "Confirmation impossible.");
+      setView(j.booking);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Confirmation impossible.");
+    } finally {
+      setConfirmingAttendance(false);
     }
   };
 
@@ -132,6 +148,16 @@ export function ManageActions({ token, booking, justPaid = false }: Props) {
 
   return (
     <div className="space-y-3">
+      {view.attendanceRequested && !view.attendanceConfirmed ? (
+        <div className="rounded-[var(--radius-card)] border border-line-strong p-5">
+          <p className="text-[17px]">Tu viens toujours ? Confirme ta venue, sinon le créneau est libéré le matin du rdv.</p>
+          <HoverButton size="lg" disabled={confirmingAttendance} onClick={confirmAttendance} className="mt-4 w-full">
+            {confirmingAttendance ? "..." : "Je confirme ma venue"}
+          </HoverButton>
+        </div>
+      ) : null}
+      {view.attendanceConfirmed ? <p className="text-[17px]" role="status">Venue confirmée, à tout à l&apos;heure.</p> : null}
+
       <div>
         <label htmlFor="manage-link" className="mb-2 block text-sm text-fg-muted">
           Ton lien d&apos;annulation. Garde-le : c&apos;est le seul moyen d&apos;annuler en ligne.

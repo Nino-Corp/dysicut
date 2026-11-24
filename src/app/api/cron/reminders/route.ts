@@ -1,20 +1,12 @@
-import { timingSafeEqual } from "node:crypto";
 import { db, dbConfigured } from "@/lib/db/supabase";
 import { addDays, parisDateKey, parisToUtc, dayLabel, timeLabel } from "@/lib/booking/time";
 import type { BookingRow } from "@/lib/booking/repo";
 import { clientReminder, manageUrl } from "@/lib/email/templates";
 import { sendMail } from "@/lib/email/send";
 import { getSmsProvider } from "@/lib/sms/provider";
+import { cronAuthorized } from "@/lib/booking/cron-auth";
 
 export const dynamic = "force-dynamic";
-
-const authorized = (req: Request) => {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return false; // sans secret configuré, la route reste fermée
-  const got = Buffer.from(req.headers.get("authorization") ?? "");
-  const want = Buffer.from(`Bearer ${secret}`);
-  return got.length === want.length && timingSafeEqual(got, want);
-};
 
 /**
  * Cron quotidien (vercel.json, ~17h-18h Paris) :
@@ -24,7 +16,7 @@ const authorized = (req: Request) => {
  * Vercel envoie automatiquement `Authorization: Bearer $CRON_SECRET`.
  */
 export async function GET(req: Request) {
-  if (!authorized(req)) return new Response("Unauthorized", { status: 401 });
+  if (!cronAuthorized(req)) return new Response("Unauthorized", { status: 401 });
   if (!dbConfigured()) return Response.json({ ok: false, error: "db" }, { status: 503 });
 
   const tomorrow = addDays(parisDateKey(new Date()), 1);
@@ -47,7 +39,8 @@ export async function GET(req: Request) {
     if (b.email && !b.email_reminder_sent_at) {
       if (await sendMail(clientReminder(b, b.cancel_token))) {
         emails++;
-        await db().from("bookings").update({ email_reminder_sent_at: new Date().toISOString() }).eq("id", b.id);
+        const sentAt = new Date().toISOString();
+        await db().from("bookings").update({ email_reminder_sent_at: sentAt, confirmation_requested_at: sentAt }).eq("id", b.id);
       }
     }
 

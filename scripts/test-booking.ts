@@ -4,6 +4,7 @@ import { parisToUtc, parisParts, addDays, timeLabel } from "../src/lib/booking/t
 import { slotsForDay, availability } from "../src/lib/booking/slots.ts";
 import { normalizePhone, formatPhone } from "../src/lib/booking/phone.ts";
 import { buildIcs } from "../src/lib/booking/ics.ts";
+import { shouldRelease } from "../src/lib/booking/attendance.ts";
 import { activeNoShows, depositCentsFor, isBlocked } from "../src/lib/booking/standing.ts";
 
 // --- fuseau : hiver (UTC+1) et été (UTC+2), changements d'heure
@@ -88,3 +89,14 @@ assert.equal(depositCentsFor({ ...base, mode: "flagged" }), 0); // client sans a
 assert.equal(depositCentsFor({ ...base, mode: "flagged", activeNoShows: 1 }), 500);
 assert.equal(depositCentsFor({ ...base, priceCents: 300 }), 300); // jamais plus que le prix
 assert.equal(depositCentsFor({ ...base, priceCents: 30 }), 0); // sous le minimum Stripe (0,50 EUR)
+
+// --- confirmation de presence : liberation des creneaux non confirmes
+const rel = { status: "confirmed", source: "web", payment_status: "none", confirmation_requested_at: "2026-11-15T16:00:00Z", attendance_confirmed_at: null, starts_at: "2026-11-16T10:00:00Z" };
+const at = (iso: string) => new Date(iso);
+assert.equal(shouldRelease(rel, at("2026-11-16T06:30:00Z")), true); // sans reponse, 3 h30 avant : libere
+assert.equal(shouldRelease({ ...rel, attendance_confirmed_at: "2026-11-15T20:00:00Z" }, at("2026-11-16T06:30:00Z")), false); // confirme
+assert.equal(shouldRelease({ ...rel, confirmation_requested_at: null }, at("2026-11-16T06:30:00Z")), false); // demande jamais envoyee (sans email)
+assert.equal(shouldRelease({ ...rel, source: "admin" }, at("2026-11-16T06:30:00Z")), false); // rdv ajoute a la main
+assert.equal(shouldRelease({ ...rel, payment_status: "paid" }, at("2026-11-16T06:30:00Z")), false); // acompte paye
+assert.equal(shouldRelease(rel, at("2026-11-16T08:30:00Z")), false); // moins de 2 h avant : trop tard pour reprendre un creneau
+assert.equal(shouldRelease({ ...rel, status: "cancelled_client" }, at("2026-11-16T06:30:00Z")), false);

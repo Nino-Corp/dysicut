@@ -3,7 +3,7 @@
 Checklist, dans l'ordre. Rien ici n'est exécuté automatiquement.
 
 ## 1. Avant de déployer
-- Supabase : coller `supabase/migrations/0001_booking.sql` (et les suivantes, dont `0003_noshow_deposit.sql` pour les absences et l'acompte) dans le SQL Editor. Créer le compte admin (Authentication > Users, Auto Confirm) et désactiver les inscriptions.
+- Supabase : coller `supabase/migrations/0001_booking.sql` (et les suivantes, dont `0003_noshow_deposit.sql` pour les absences et l'acompte, et `0004_attendance_confirmation.sql` pour la confirmation la veille) dans le SQL Editor. Créer le compte admin (Authentication > Users, Auto Confirm) et désactiver les inscriptions.
 - Resend : vérifier le nom de domaine (enregistrements DNS), sinon l'envoi n'est possible que vers l'email du compte.
 - Renseigner `legal` dans `src/config/site.ts` (nom, SIRET, email réel, médiateur) : la page mentions légales affiche « à compléter » sinon.
 - Adresse : quand elle est confirmée, corriger `site.address` et passer `confirmed: true` (active l'adresse dans le JSON-LD, la page mentions légales et les emails).
@@ -27,7 +27,7 @@ Un acompte est rendu automatiquement si le client annule dans les délais ou si 
 - Redéployer si `NEXT_PUBLIC_SITE_URL` a été changée après coup (valeur figée au build).
 
 ## 4. Cron
-`vercel.json` déclare `/api/cron/reminders` chaque jour à 16h UTC (17h ou 18h à Paris). Vercel envoie `Authorization: Bearer $CRON_SECRET`. Vérifier dans Settings > Cron Jobs qu'il est listé ; le plan gratuit autorise un cron quotidien.
+`vercel.json` déclare `/api/cron/reminders` chaque jour à 16h UTC (17h ou 18h à Paris). Vercel envoie `Authorization: Bearer $CRON_SECRET`. Un second cron, `/api/cron/confirmations` (6h30 UTC, soit 7h30 ou 8h30 à Paris), libère les rdv du jour dont le client n'a pas confirmé sa venue après le rappel de la veille (jamais les rdv ajoutés à la main, avec acompte payé, ou sans email). Vérifier dans Settings > Cron Jobs que les deux sont listés ; le plan gratuit (Hobby) autorise 2 crons, chacun une fois par jour.
 
 ## 5. Après la mise en ligne
 - Ouvrir `/sitemap.xml`, `/robots.txt`, `/opengraph-image`.

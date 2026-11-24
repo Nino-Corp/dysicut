@@ -46,6 +46,8 @@ export type BookingRow = {
   stripe_session_id: string | null;
   stripe_payment_intent: string | null;
   checkout_url: string | null;
+  confirmation_requested_at: string | null;
+  attendance_confirmed_at: string | null;
   source: "web" | "admin";
   cancel_token: string;
   created_at: string;
@@ -69,6 +71,9 @@ export type BookingView = {
   checkoutUrl: string | null;
   /** Fin de la réservation provisoire (paiement en attente). */
   holdExpiresAt: string | null;
+  /** Le rappel de la veille demande au client de confirmer sa venue. */
+  attendanceRequested: boolean;
+  attendanceConfirmed: boolean;
   cancellable: boolean;
   /** Dernier instant pour annuler en ligne. */
   cancelDeadline: string;
@@ -87,6 +92,8 @@ export const toView = (b: BookingRow, cancelMinHours: number, now = new Date()):
     paymentStatus: b.payment_status,
     checkoutUrl: b.status === "pending_payment" && b.hold_expires_at && new Date(b.hold_expires_at) > now ? b.checkout_url : null,
     holdExpiresAt: b.status === "pending_payment" ? b.hold_expires_at : null,
+    attendanceRequested: b.confirmation_requested_at !== null,
+    attendanceConfirmed: b.attendance_confirmed_at !== null,
     cancellable: b.status === "confirmed" && now < deadline,
     cancelDeadline: deadline.toISOString(),
   };
@@ -297,4 +304,22 @@ export async function refundIfPaid(b: BookingRow): Promise<{ booking: BookingRow
   }
   const { data } = await db().from("bookings").update({ payment_status: "refunded" }).eq("id", b.id).select("*").maybeSingle();
   return { booking: (data as BookingRow | null) ?? { ...b, payment_status: "refunded" }, ok: true };
+}
+
+/** Le client confirme sa venue (bouton du rappel de la veille). Idempotent. */
+export async function confirmAttendance(token: string): Promise<BookingRow> {
+  const b = await findByToken(token);
+  if (!b) throw new BookingError("NOT_FOUND");
+  if (b.status !== "confirmed" || new Date(b.starts_at) <= new Date()) throw new BookingError("NOT_CANCELLABLE");
+  if (b.attendance_confirmed_at) return b;
+  const { data, error } = await db()
+    .from("bookings")
+    .update({ attendance_confirmed_at: new Date().toISOString() })
+    .eq("id", b.id)
+    .eq("status", "confirmed")
+    .select("*")
+    .maybeSingle();
+  if (error) fail(error);
+  if (!data) throw new BookingError("NOT_CANCELLABLE");
+  return data as BookingRow;
 }

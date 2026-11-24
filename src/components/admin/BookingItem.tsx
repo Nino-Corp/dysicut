@@ -14,7 +14,11 @@ const statusLabel: Record<BookingRow["status"], string | null> = {
 
 /** Ligne d'agenda : heure en grand, nom, prestation. Toute la ligne est cliquable (cible >= 44 px). */
 export function BookingItem({ b }: { b: BookingRow }) {
-  const status = statusLabel[b.status];
+  const released = b.status === "cancelled_client" && b.confirmation_requested_at !== null && b.attendance_confirmed_at === null;
+  const status = released ? "Libéré, sans confirmation" : statusLabel[b.status];
+  const paidBadge = b.payment_status === "paid" && b.status === "confirmed";
+  // Une seule pastille d'état à la fois pour ne pas écraser le nom sur mobile.
+  const attendance = !paidBadge && b.status === "confirmed" && b.confirmation_requested_at ? (b.attendance_confirmed_at ? "Venue confirmée" : "Sans réponse") : null;
   const inactive = b.status !== "confirmed" && b.status !== "pending_payment";
   return (
     <Link
@@ -31,7 +35,8 @@ export function BookingItem({ b }: { b: BookingRow }) {
           {b.service_name} · {formatPhone(b.phone)}
         </div>
       </div>
-      {b.payment_status === "paid" && b.status === "confirmed" ? <span className="shrink-0 rounded-full border border-line-strong px-2.5 py-1 text-xs text-fg-muted">Acompte payé</span> : null}
+      {attendance ? <span className="shrink-0 rounded-full border border-line-strong px-2.5 py-1 text-xs text-fg-muted">{attendance}</span> : null}
+      {paidBadge ? <span className="shrink-0 rounded-full border border-line-strong px-2.5 py-1 text-xs text-fg-muted">Acompte payé</span> : null}
       {status ? <span className="shrink-0 rounded-full border border-line-strong px-2.5 py-1 text-xs text-fg-muted">{status}</span> : null}
       {b.source === "admin" && !status ? <span className="shrink-0 rounded-full border border-line-strong px-2.5 py-1 text-xs text-fg-muted">Manuel</span> : null}
     </Link>

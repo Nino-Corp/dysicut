@@ -221,33 +221,42 @@ export function clientConfirmation(b: BookingRow, token: string): Mail {
   return { to: b.email!, subject: `Rdv confirmé : ${when(b)}`, html, text, attachments: [{ filename: "rdv-dysicut.ics", content: calendarFile(b, token), contentType: "text/calendar" }] };
 }
 
-/** Client : rappel la veille. */
+/** Client : rappel la veille, avec le bouton de confirmation de présence. */
 export function clientReminder(b: BookingRow, token: string | null): Mail {
   const { html, text } = layout({
-    preheader: `Demain, ${timeLabel(new Date(b.starts_at))} : ${b.service_name}.`,
+    preheader: `Demain, ${timeLabel(new Date(b.starts_at))} : confirme ta venue.`,
     tag: "Rappel",
     hero: hero(b, { hint: "Demain" }),
-    title: "On se voit demain",
-    intro: `Salut ${esc(b.first_name)}, petit rappel de ton rdv.`,
+    title: "On se voit demain ?",
+    intro: token
+      ? `Salut ${esc(b.first_name)}, confirme ta venue en un tap. Sans réponse avant demain 7h30, le créneau est libéré pour quelqu'un d'autre.`
+      : `Salut ${esc(b.first_name)}, petit rappel de ton rdv.`,
     facts: [
       ["Prestation", esc(b.service_name)],
       ["Durée", `${minutes(b)} min`],
     ],
     rows: [["Adresse", addressLine().html]],
-    ...(token ? { primary: { label: "Annuler mon rdv", href: manageUrl(token) } } : {}),
+    ...(token
+      ? { primary: { label: "Je confirme ma venue", href: `${manageUrl(token)}?confirmer=1` }, secondary: [{ label: "Annuler mon rdv", href: manageUrl(token) }] }
+      : {}),
     after: ["Si tu ne peux pas venir, annule pour libérer le créneau. Les absences répétées sans prévenir bloquent la réservation en ligne."],
   });
-  return { to: b.email!, subject: `Rappel : rdv demain, ${timeLabel(new Date(b.starts_at))}`, html, text };
+  return { to: b.email!, subject: `Confirme ton rdv de demain, ${timeLabel(new Date(b.starts_at))}`, html, text };
 }
 
 /** Client : annulation (par le barber, ou confirmation d'une annulation faite par le client). */
-export function clientCancelled(b: BookingRow, by: "barber" | "client", refunded = false): Mail {
+export function clientCancelled(b: BookingRow, by: "barber" | "client" | "unconfirmed", refunded = false): Mail {
   const { html, text } = layout({
     preheader: `Rdv du ${when(b)} annulé.`,
     tag: "Annulé",
     hero: hero(b, { struck: true }),
     title: "Rdv annulé",
-    intro: by === "barber" ? `Salut ${esc(b.first_name)}, ce rdv est annulé. Désolé pour le dérangement.` : `Salut ${esc(b.first_name)}, ton rdv est bien annulé.`,
+    intro:
+      by === "barber"
+        ? `Salut ${esc(b.first_name)}, ce rdv est annulé. Désolé pour le dérangement.`
+        : by === "unconfirmed"
+          ? `Salut ${esc(b.first_name)}, on n'a pas reçu ta confirmation : ton créneau a été libéré. Tu viens quand même ? Reprends rdv, il reste peut-être de la place.`
+          : `Salut ${esc(b.first_name)}, ton rdv est bien annulé.`,
     facts: [["Prestation", esc(b.service_name)]],
     primary: { label: "Reprendre RDV", href: `${site.url}/reserver` },
     ...(refunded ? { after: [`Ton acompte de ${euros(b.deposit_cents)} est remboursé. Il apparaît sur ton relevé sous quelques jours.`] } : {}),

@@ -66,6 +66,7 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
         <Fact k="Durée" v={`${minutes} min`} />
         <Fact k="Téléphone" v={formatPhone(b.phone)} />
         <Fact k="Origine" v={b.source === "admin" ? "Ajouté à la main" : "Site"} />
+        {b.confirmation_requested_at ? <Fact k="Confirmation" v={b.attendance_confirmed_at ? "Venue confirmée" : b.status === "cancelled_client" ? "Sans réponse, libéré" : "Sans réponse"} wide /> : null}
         {b.deposit_cents > 0 ? <Fact k="Acompte" v={`${b.deposit_cents / 100} € - ${PAYMENT[b.payment_status]}`} wide /> : null}
         {b.email ? <Fact k="Email" v={b.email} wide /> : null}
       </dl>

@@ -9,15 +9,15 @@ import { findByToken, getConfig, toView } from "@/lib/booking/repo";
 export const metadata: Metadata = { title: "Mon rendez-vous", robots: { index: false, follow: false }, referrer: "no-referrer" };
 export const dynamic = "force-dynamic";
 
-export default async function Rdv({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ paiement?: string }> }) {
+export default async function Rdv({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ paiement?: string; confirmer?: string }> }) {
   const { token } = await params;
-  const { paiement } = await searchParams;
+  const { paiement, confirmer } = await searchParams;
   const b = await findByToken(token).catch(() => null);
   if (!b) notFound();
   const cfg = await getConfig();
   const view = toView(b, cfg.cancelMinHours);
   const justPaid = paiement === "ok";
-  const heading = view.status === "confirmed" && justPaid ? "Acompte reçu, c'est confirmé." : view.status === "pending_payment" ? (justPaid ? "Paiement reçu." : "Il reste l'acompte.") : "Mon rendez-vous";
+  const heading = view.status === "confirmed" && justPaid ? "Acompte reçu, c'est confirmé." : view.status === "pending_payment" ? (justPaid ? "Paiement reçu." : "Il reste l'acompte.") : view.status === "confirmed" && confirmer && view.attendanceRequested && !view.attendanceConfirmed ? "Tu viens demain ?" : "Mon rendez-vous";
 
   return (
     <BookingShell>
