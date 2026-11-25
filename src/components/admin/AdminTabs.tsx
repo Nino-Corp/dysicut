@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LinkPending } from "@/components/admin/LinkPending";
 import { CalendarDaysIcon, Cog6ToothIcon, NoSymbolIcon, PlusIcon, UsersIcon } from "@heroicons/react/24/outline";
 
 const tabs = [
@@ -29,6 +30,7 @@ export function AdminTabs() {
               >
                 <Icon className="size-6" aria-hidden />
                 {label}
+                <LinkPending />
               </Link>
             </li>
           );

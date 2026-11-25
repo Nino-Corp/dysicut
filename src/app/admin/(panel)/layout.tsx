@@ -8,7 +8,7 @@ import { requireAdmin } from "@/lib/admin/session";
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   await requireAdmin();
   return (
-    <div className="min-h-dvh">
+    <div className="admin min-h-dvh">
       <header className="mx-auto flex h-16 max-w-[720px] items-center justify-between px-5">
         <Link href="/admin" aria-label="Agenda" className="inline-flex h-11 items-center">
           <LogoMark className="h-9 w-auto" />

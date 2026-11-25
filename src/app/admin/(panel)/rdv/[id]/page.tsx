@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LinkPending } from "@/components/admin/LinkPending";
 import { notFound } from "next/navigation";
 import { ChatBubbleLeftIcon, ChevronLeftIcon, PhoneIcon } from "@heroicons/react/24/outline";
 import { ActionForm, ConfirmSubmit, SubmitButton } from "@/components/admin/ActionForm";
@@ -49,6 +50,7 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
     <div className="space-y-8">
       <Link href={`/admin?d=${parisDateKey(start)}`} className="inline-flex h-11 items-center gap-1 text-[15px] text-fg-muted">
         <ChevronLeftIcon className="size-4" aria-hidden /> Agenda
+        <LinkPending />
       </Link>
 
       <header>

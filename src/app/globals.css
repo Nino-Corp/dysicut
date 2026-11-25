@@ -103,6 +103,12 @@ h1, h2, h3 {
 
 html { -webkit-tap-highlight-color: transparent; }
 
+/* Admin : retour immediat au toucher, puis lien marque tant que la page suivante charge. */
+.admin :is(a, button, label) { touch-action: manipulation; }
+.admin :is(a, button):active { opacity: 0.55; transition: none; }
+.admin a:has([data-pending]) { opacity: 0.55; }
+.admin nav a:has([data-pending]) { opacity: 1; color: var(--fg); background: var(--line); }
+
 /* Burger « lame » : deux traits (le second plus court) qui se croisent en X au clic. */
 .burger { position: relative; display: block; width: 24px; height: 24px; }
 .burger-bar {

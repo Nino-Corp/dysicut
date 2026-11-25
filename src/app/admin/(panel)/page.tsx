@@ -1,3 +1,4 @@
+import { LinkPending } from "@/components/admin/LinkPending";
 import Link from "next/link";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { BookingItem } from "@/components/admin/BookingItem";
@@ -34,13 +35,14 @@ export default async function Agenda({ searchParams }: { searchParams: Promise<{
   return (
     <div className="space-y-6">
       <div className="flex rounded-full border border-line-strong p-1">
-        <Link href={`/admin?d=${date}`} className={chip(!week)}>Jour</Link>
-        <Link href={`/admin?d=${date}&v=semaine`} className={chip(week)}>Semaine</Link>
+        <Link href={`/admin?d=${date}`} className={chip(!week)}>Jour<LinkPending /></Link>
+        <Link href={`/admin?d=${date}&v=semaine`} className={chip(week)}>Semaine<LinkPending /></Link>
       </div>
 
       <div className="flex items-center justify-between gap-2">
         <Link href={link(addDays(date, -step))} aria-label="Précédent" className="inline-flex size-11 items-center justify-center rounded-full border border-line-strong hover:bg-surface-2">
           <ChevronLeftIcon className="size-5" aria-hidden />
+          <LinkPending />
         </Link>
         <div className="text-center">
           <h1 className="text-2xl font-bold tracking-[-0.03em]">{title}</h1>
@@ -48,10 +50,11 @@ export default async function Agenda({ searchParams }: { searchParams: Promise<{
         </div>
         <Link href={link(addDays(date, step))} aria-label="Suivant" className="inline-flex size-11 items-center justify-center rounded-full border border-line-strong hover:bg-surface-2">
           <ChevronRightIcon className="size-5" aria-hidden />
+          <LinkPending />
         </Link>
       </div>
       {date !== today || (week && !days.includes(today)) ? (
-        <Link href={link(today)} className="block text-center text-[15px] text-fg-muted underline underline-offset-4">Revenir à aujourd&apos;hui</Link>
+        <Link href={link(today)} className="block text-center text-[15px] text-fg-muted underline underline-offset-4">Revenir à aujourd&apos;hui<LinkPending /></Link>
       ) : null}
 
       <div className="space-y-8">
@@ -64,7 +67,7 @@ export default async function Agenda({ searchParams }: { searchParams: Promise<{
             <section key={d} aria-label={dayLabel(dayStart)}>
               {week ? (
                 <h2 className="mb-3 flex items-baseline justify-between text-lg font-semibold tracking-tight">
-                  <Link href={link(d, false)} className="underline-offset-4 hover:underline">{cap(dayLabel(dayStart))}{d === today ? " (aujourd'hui)" : ""}</Link>
+                  <Link href={link(d, false)} className="underline-offset-4 hover:underline">{cap(dayLabel(dayStart))}{d === today ? " (aujourd'hui)" : ""}<LinkPending /></Link>
                   <span className="text-sm font-normal text-fg-muted">{list.filter((b) => b.status === "confirmed").length} rdv</span>
                 </h2>
               ) : null}

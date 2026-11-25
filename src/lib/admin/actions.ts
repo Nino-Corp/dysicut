@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db/supabase";
 import { newCancelToken } from "@/lib/booking/token";
@@ -73,8 +74,8 @@ export async function cancelBooking(_: ActionState, f: FormData): Promise<Action
     refunded = r.ok;
   }
   revalidatePath("/admin", "layout");
-  if (b.email) await sendMail(clientCancelled(b, "barber", refunded));
-  const mail = b.email ? "Le client a reçu un email." : "Prévins le client toi-même (boutons ci-dessus).";
+  if (b.email) after(() => sendMail(clientCancelled(b, "barber", refunded)));
+  const mail = b.email ? "Un email part au client." : "Prévins le client toi-même (boutons ci-dessus).";
   if (hadDeposit && !refunded) return done(`Rdv annulé, mais le remboursement de l'acompte a échoué : rembourse-le depuis le dashboard Stripe. ${mail}`);
   return done(`Rdv annulé${refunded ? ", acompte remboursé" : ""}. ${mail}`);
 }
@@ -185,7 +186,7 @@ export async function createManualBooking(_: ActionState, f: FormData): Promise<
   const b = data as BookingRow;
   if (b.email) {
     const mail = clientConfirmation(b, token);
-    await sendMail({ ...mail, attachments: [{ filename: "rdv-dysicut.ics", content: calendarFile(b, token), contentType: "text/calendar" }] });
+    after(() => sendMail({ ...mail, attachments: [{ filename: "rdv-dysicut.ics", content: calendarFile(b, token), contentType: "text/calendar" }] }));
   }
   revalidatePath("/admin", "layout");
   redirect(`/admin/rdv/${b.id}`);

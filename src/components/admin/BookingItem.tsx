@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LinkPending } from "@/components/admin/LinkPending";
 import { formatPhone } from "@/lib/booking/phone";
 import { timeLabel } from "@/lib/booking/time";
 import type { BookingRow } from "@/lib/booking/repo";
@@ -39,6 +40,7 @@ export function BookingItem({ b }: { b: BookingRow }) {
       {paidBadge ? <span className="shrink-0 rounded-full border border-line-strong px-2.5 py-1 text-xs text-fg-muted">Acompte payé</span> : null}
       {status ? <span className="shrink-0 rounded-full border border-line-strong px-2.5 py-1 text-xs text-fg-muted">{status}</span> : null}
       {b.source === "admin" && !status ? <span className="shrink-0 rounded-full border border-line-strong px-2.5 py-1 text-xs text-fg-muted">Manuel</span> : null}
+      <LinkPending />
     </Link>
   );
 }
